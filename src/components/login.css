@@ -1,0 +1,23 @@
+
+@media only screen and (min-device-width: 360px) , (max-device-width: 1020px) {
+    .test{
+        /* background-image: url("https://img.freepik.com/free-vector/ai-powered-content-creation--composition-with-human-characters-cute-robot-generating-art-computer-screen-3d-vector-illustration_1284-82522.jpg?w=1060&t=st=1689836394~exp=1689836994~hmac=eb28c64a57dd9061d06765898b47af22957baff47e58a551cb7969ba84538159"); */
+        background-position: center;
+        background-size: cover;
+        backdrop-filter: (5px);
+        background-color: #ffffff;
+      }
+    
+      .tempglass{
+        background: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+      }
+  }
+ 
+ 
+
+
