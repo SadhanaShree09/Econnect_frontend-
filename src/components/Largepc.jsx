@@ -86,7 +86,7 @@ function Largepc({ log }) {
               <p className='mb-3 mt-4 font-poppins text-base text-center text-zinc-300 '>Use your Google account to continue with RBG EConnect!</p>
             </div>
             <div className="flex justify-center">
-              <GoogleOAuthProvider clientId="333036008565-7qkpcqr080na6l9fpcn492kc00ea2bv1.apps.googleusercontent.com">
+              <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
                 <GoogleLogin
                   className="w-full h-full"
                   onSuccess={handleGoogleLogin}

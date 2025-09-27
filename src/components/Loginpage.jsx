@@ -183,7 +183,7 @@ const handleGoogleLogin = async (credentialResponse) => {
   //             Sign in with Google
   //           </h2>
   //           <div className="flex justify-center">
-  //             <GoogleOAuthProvider clientId="616660088488-17nrc3n7j9ibd7f29680qorv56442nd8.apps.googleusercontent.com">
+  //             <GoogleOAuthProvider clientId="152946581457-15hbl22a667fe0le1mkt5e6d14kisrtd.apps.googleusercontent.com">
   //               <GoogleLogin
   //                 onSuccess={handleGoogleLogin}
   //                 useOneTap
@@ -212,7 +212,7 @@ const handleGoogleLogin = async (credentialResponse) => {
               Sign in with Google
             </h2>
             <div className="flex justify-center">
-              <GoogleOAuthProvider clientId="616660088488-17nrc3n7j9ibd7f29680qorv56442nd8.apps.googleusercontent.com">
+              <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
                 <GoogleLogin onSuccess={handleGoogleLogin} />
               </GoogleOAuthProvider>
             </div>
