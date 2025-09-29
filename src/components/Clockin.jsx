@@ -223,7 +223,7 @@ function Clockin() {
   //     redirect: "follow"
   //   };
 
-  //   fetch("http://127.0.0.1:8000/AutoClockout", requestOptions)
+  //   fetch("https://econnectbackend-production.up.railway.app/AutoClockout", requestOptions)
   //     .catch(error => console.error(error));
   // };
 

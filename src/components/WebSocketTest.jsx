@@ -11,7 +11,7 @@ const WebSocketTest = () => {
   //     <h3 className="font-bold mb-2">WebSocket Connection Status</h3>
   //     <div className="space-y-2 text-sm">
   //       <div>User ID: {testUserId || 'NOT FOUND'}</div>
-  //       <div>API Base: {import.meta.env.VITE_HOST_IP || 'http://127.0.0.1:8000'}</div>
+  //       <div>API Base: {import.meta.env.VITE_HOST_IP || 'https://econnectbackend-production.up.railway.app'}</div>
   //       <div className={`font-medium ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
   //         Status: {isConnected ? 'Connected' : 'Disconnected'}
   //       </div>

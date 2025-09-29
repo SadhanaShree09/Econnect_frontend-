@@ -27,7 +27,7 @@ export default function Fileuploader({ userid, docName, onUpload, onClose }) {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/upload_document",
+  "https://econnectbackend-production.up.railway.app/upload_document",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

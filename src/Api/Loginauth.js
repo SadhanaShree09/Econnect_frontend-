@@ -25,7 +25,7 @@ export const Apisignup = async ({ email, password, name }) => {
 };
 
 export const Apisignin = async ({ client_name, email }) => {
-  const response = await Baseaxios.post("/Gsignin", {
+  const response = await Baseaxios.post("https://econnectbackend-production.up.railway.app/Gsignin", {
     client_name: client_name,
     email: email,
   }).catch((err) => {

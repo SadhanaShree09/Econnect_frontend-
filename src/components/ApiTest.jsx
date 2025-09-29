@@ -69,7 +69,7 @@ const ApiTest = () => {
           <h3 className="font-semibold mb-2">Debug Info:</h3>
           <div className="text-sm space-y-1">
             <div>Frontend URL: {window.location.origin}</div>
-            <div>API Base URL: {import.meta.env.VITE_HOST_IP || "http://127.0.0.1:8000"}</div>
+            <div>API Base URL: {import.meta.env.VITE_HOST_IP || "https://econnectbackend-production.up.railway.app"}</div>
             <div>User ID: {localStorage.getItem('userid') || 'Not logged in'}</div>
           </div>
         </div>
