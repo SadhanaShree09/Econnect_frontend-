@@ -12,7 +12,8 @@ import localstorageEncrypt from "localstorage-encrypt";
 import axios from "axios";
 
 // Use HTTPS URL for production
-export const ipadr = import.meta.env.VITE_HOST_IP || "https://econnectbackend-production.up.railway.app";
+// Always use HTTPS for backend API
+export const ipadr = (import.meta.env.VITE_HOST_IP || "https://econnectbackend-production.up.railway.app").replace(/^http:/, "https:");
 console.log("API Base URL:", ipadr); // Debugging step
 
 export const LS = {

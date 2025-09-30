@@ -91,8 +91,10 @@ const Leaveapproval = () => {
         TL: LS.get("position") === "Manager" ? LS.get("name") : undefined
       };
 
+      console.log("Leave Approval API Request:", endpoint, requestParams); // Debug log
       const response = await axios.get(endpoint, { params: requestParams });
-      
+      console.log("Leave Approval API Response:", response); // Debug log
+
       let responseData = response.data && Array.isArray(response.data.user_leave_requests)
         ? response.data.user_leave_requests
         : [];
