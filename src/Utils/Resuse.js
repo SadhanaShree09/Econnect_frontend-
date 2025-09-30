@@ -11,10 +11,15 @@
 import localstorageEncrypt from "localstorage-encrypt";
 import axios from "axios";
 
-// Use HTTPS URL for production
-// Always use HTTPS for backend API
-export const ipadr = (import.meta.env.VITE_HOST_IP || "https://econnectbackend-production.up.railway.app").replace(/^http:/, "https:");
-console.log("API Base URL:", ipadr); // Debugging step
+// FORCE HTTPS - Production fix for Mixed Content Error
+const envUrl = import.meta.env.VITE_HOST_IP;
+const defaultUrl = "https://econnectbackend-production.up.railway.app";
+
+// Ensure HTTPS protocol regardless of environment variable value
+export const ipadr = envUrl ? envUrl.replace(/^http:/, "https:") : defaultUrl;
+
+console.log("API Base URL (Production Safe):", ipadr);
+console.log("Original Env Value:", envUrl);
 
 export const LS = {
   save: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
