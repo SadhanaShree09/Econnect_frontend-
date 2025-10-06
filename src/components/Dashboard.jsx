@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from "axios";
 import { Baseaxios, LS ,ipadr} from "../Utils/Resuse";
+import { format } from "date-fns";
 
 export default function Clockdashboard() {
   const [attendanceData, setAttendanceData] = useState([]);
@@ -24,6 +25,28 @@ export default function Clockdashboard() {
     };
     fetchData();
   }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      return format(date, 'dd/MM/yyyy');
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    try {
+      const date = new Date(timeString);
+      if (isNaN(date.getTime())) return timeString;
+      return format(date, 'hh:mm:ss a');
+    } catch (error) {
+      return timeString;
+    }
+  };
 
   return (
     <div className="rounded-md  w-full px-[7rem]">
@@ -72,13 +95,13 @@ export default function Clockdashboard() {
                 {attendanceData.map((row, index) => (
                   <tr key={index}>
                     <td className="p-2 whitespace-nowrap">
-                      <div className="text-center">{row.date}</div>
+                      <div className="text-center">{formatDate(row.date)}</div>
                     </td>
                     <td className="p-2 whitespace-nowrap">
-                      <div className="text-center">{row.clockin}</div>
+                      <div className="text-center">{formatTime(row.clockin)}</div>
                     </td>
                     <td className="p-2 whitespace-nowrap">
-                      <div className="text-center">{row.clockout}</div>
+                      <div className="text-center">{formatTime(row.clockout)}</div>
                     </td>
                     <td className="p-2 whitespace-nowrap">
                       <div className="text-center">{row.total_hours_worked}</div>

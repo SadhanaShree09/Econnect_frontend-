@@ -123,6 +123,20 @@ export default function Clockdashboard() {
     return format(date, 'dd/MM/yyyy');
   };
 
+  const formatTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    try {
+      const date = new Date(timeString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return timeString;
+      // Format as HH:MM:SS AM/PM
+      return format(date, 'hh:mm:ss a');
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return timeString;
+    }
+  };
+
   
   const filteredAttendanceData = attendanceData.filter((row) => {
     const rowDate = startOfDay(new Date(row.date));
@@ -231,10 +245,10 @@ export default function Clockdashboard() {
                         <div className="text-center">{formatDate(row.date)}</div>
                       </td>
                       <td className="p-2 whitespace-nowrap">
-                        <div className="text-center">{row.clockin}</div>
+                        <div className="text-center">{formatTime(row.clockin)}</div>
                       </td>
                       <td className="p-2 whitespace-nowrap">
-                        <div className="text-center">{row.clockout}</div>
+                        <div className="text-center">{formatTime(row.clockout)}</div>
                       </td>
                       <td className="p-2 whitespace-nowrap">
                         <div className="text-center">{row.total_hours_worked}</div>
