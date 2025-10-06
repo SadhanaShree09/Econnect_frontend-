@@ -1,4 +1,4 @@
-/* Force HTTPS API endpoints for production deployment */
-.env* text eol=lf
-src/Utils/Resuse.js export
+# Force HTTPS API endpoints for production deployment
+*.env text eol=lf
+src/Utils/Resuse.js text
 dist/ export-ignore

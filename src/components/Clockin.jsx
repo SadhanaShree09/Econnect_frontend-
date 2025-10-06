@@ -31,7 +31,18 @@ function Clockin() {
       interval = setInterval(() => {
         const now = new Date();
         const elapsed = Math.floor((now - clockInTime) / 1000);
-        setElapsedTime(elapsed);
+        
+        // Cap elapsed time at 24 hours (86400 seconds) to prevent unrealistic durations
+        const cappedElapsed = Math.min(elapsed, 86400);
+        setElapsedTime(cappedElapsed);
+        
+        // If elapsed time exceeds 24 hours, show warning
+        if (elapsed > 86400) {
+          toast.warning("⚠️ You've been clocked in for over 24 hours! Please clock out or contact your administrator.", {
+            toastId: "24hr-warning",
+            autoClose: false
+          });
+        }
       }, 1000);
     }
     return () => clearInterval(interval);
@@ -45,8 +56,26 @@ function Clockin() {
     if (savedStatus) {
       setCurrentStatus(savedStatus);
       if (savedStatus === "clocked-in" && savedClockInTime) {
-        setClockInTime(new Date(savedClockInTime));
-        setLogin(true);
+        const clockInDate = new Date(savedClockInTime);
+        const now = new Date();
+        
+        // Check if clock-in was from a previous day
+        const clockInDay = clockInDate.toDateString();
+        const today = now.toDateString();
+        
+        if (clockInDay !== today) {
+          // Clock-in is from a previous day - clear the status and warn user
+          localStorage.removeItem("clockStatus");
+          localStorage.removeItem("clockInTime");
+          setCurrentStatus("ready");
+          toast.warning("⚠️ Your previous clock-in session was from a different day. Please contact administrator to complete previous day's attendance.", {
+            autoClose: 10000
+          });
+        } else {
+          // Same day - restore the clock-in state
+          setClockInTime(clockInDate);
+          setLogin(true);
+        }
       }
     }
   }, []);
@@ -161,26 +190,54 @@ function Clockin() {
       .then(response => response.json())
       .then(data => {
         setIsLoading(false);
-        if (data.message && (data.message.includes("Clock-out successful") || data.message.includes("Clock-out sucessful"))) {
-          const now = new Date();
-          setCurrentStatus("clocked-out");
-          setLogin(false);
-          setElapsedTime(0);
-          
-          // Clear localStorage
-          localStorage.removeItem("clockStatus");
-          localStorage.removeItem("clockInTime");
-          
-          toast.success(`✅ Successfully clocked out at ${formatTime(now)}! Total work time: ${formatElapsedTime(elapsedTime)}.`);
-        } else if (data.message && data.message.includes("Clock-in required")) {
-          toast.warning("⚠️ Please clock in first before clocking out.");
-          setCurrentStatus("ready");
+        
+        // Check for various response types
+        if (data.message) {
+          if (data.message.includes("Clock-out successful") || data.message.includes("Clock-out sucessful")) {
+            const now = new Date();
+            setCurrentStatus("clocked-out");
+            setLogin(false);
+            
+            // Clear localStorage
+            localStorage.removeItem("clockStatus");
+            localStorage.removeItem("clockInTime");
+            
+            // Extract work time from message if available
+            const workTimeMatch = data.message.match(/Total work time: (.+?)$/);
+            const workTime = workTimeMatch ? workTimeMatch[1] : formatElapsedTime(elapsedTime);
+            
+            setElapsedTime(0);
+            toast.success(`✅ ${data.message}`, { autoClose: 5000 });
+          } else if (data.message.includes("Previous Day") || data.message.includes("previous day") || data.message.includes("incomplete")) {
+            // User needs to use previous day clock-out
+            toast.warning(`⚠️ ${data.message}`, {
+              autoClose: 10000
+            });
+          } else if (data.message.includes("already clocked out") || data.message.includes("Already clocked out")) {
+            toast.info(`ℹ️ ${data.message}`);
+            setLogin(false);
+            setCurrentStatus("clocked-out");
+            localStorage.removeItem("clockStatus");
+            localStorage.removeItem("clockInTime");
+          } else if (data.message.includes("Clock-in required") || data.message.includes("Please clock in")) {
+            toast.warning("⚠️ Please clock in first before clocking out.");
+            setCurrentStatus("ready");
+            setLogin(false);
+            localStorage.removeItem("clockStatus");
+            localStorage.removeItem("clockInTime");
+          } else {
+            // Generic success message
+            toast.success("✅ " + data.message);
+            setLogin(false);
+            setCurrentStatus("clocked-out");
+            localStorage.removeItem("clockStatus");
+            localStorage.removeItem("clockInTime");
+          }
+        } else if (data.error) {
+          // Handle error response
+          toast.error("❌ " + data.error);
         } else {
-          toast.success("✅ " + data.message);
-          setLogin(false);
-          setCurrentStatus("clocked-out");
-          localStorage.removeItem("clockStatus");
-          localStorage.removeItem("clockInTime");
+          toast.info("ℹ️ Clock-out processed");
         }
       })
       .catch(error => {
