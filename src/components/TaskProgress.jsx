@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
-import { useParams } from 'react-router-dom';
 import { useNavigate } from "react-router-dom";
 import { 
   FaTrashAlt, FaEdit, FaCheckCircle, FaRegCircle, FaTimes, FaPaperclip, 
@@ -47,8 +46,26 @@ const mapColumnToStatus = (column) => {
   }
 };
 
-// Main Employee Task Progress Component
-const ManagerTaskProgress = () => {
+const mapStatusToColumn = (status) => {
+  if (!status) return "todo";
+  const statusLower = status.toLowerCase();
+  if (statusLower === "pending" || statusLower === "todo" || statusLower === "to do") return "todo";
+  if (statusLower === "in progress" || statusLower === "in-progress" || statusLower === "ongoing") return "in-progress";
+  if (statusLower === "completed" || statusLower === "done" || statusLower === "complete") return "completed";
+  return "todo";
+};
+
+const TaskProgress = () => {
+  // Utility to always format date as yyyy-mm-dd
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    const parts = dateStr.split(/[-\/]/);
+    if (parts.length === 3 && parts[2].length === 4) {
+      return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+    return dateStr;
+  };
   const navigate = useNavigate();
   const [employeeTasks, setEmployeeTasks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -62,6 +79,8 @@ const ManagerTaskProgress = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedEmployees, setExpandedEmployees] = useState(new Set());
 
+  // Auto-detect role
+  const userRole = LS.get("role") || "employee"; // fallback to employee
   const userId = LS.get("id");
 
   const statusColumns = [
@@ -76,19 +95,15 @@ const ManagerTaskProgress = () => {
     high: "text-red-600 bg-red-100"
   };
 
-  // Enhanced function to check due date status
   const getDueDateStatus = (dueDate, isCompleted = false) => {
     if (!dueDate || isCompleted) return null;
-    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    const due = new Date(dueDate);
+    const dueStr = formatDate(String(dueDate).slice(0, 10));
+    const due = new Date(dueStr + 'T00:00:00');
     due.setHours(0, 0, 0, 0);
-    
     const diffTime = due - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
     if (diffDays < 0) {
       return {
         status: 'overdue',
@@ -118,11 +133,9 @@ const ManagerTaskProgress = () => {
         icon: <FaClock className="text-blue-600" />
       };
     }
-    
     return null;
   };
 
-  // Fetch all employee tasks assigned by this manager
   const fetchEmployeeTasks = useCallback(async () => {
     setLoading(true);
     try {
@@ -130,25 +143,18 @@ const ManagerTaskProgress = () => {
       const queryParams = new URLSearchParams({
         manager_name: managerName
       });
-      
       const response = await fetch(`${ipadr}/manager_tasks?${queryParams.toString()}`);
-      
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to fetch manager tasks");
+        throw new Error(errorData.detail || "Failed to fetch tasks");
       }
-
       const data = await response.json();
-      
-      // Remove manager's self-assigned tasks
-      const managerId = LS.get("id");
-      const filteredData = data.filter(task => task.userid !== managerId && task.assigned_to_id !== managerId);
-      
+      // Remove self-assigned tasks
+      const filteredData = data.filter(task => task.userid !== userId && task.assigned_to_id !== userId);
       // Group tasks by employee
       const groupedTasks = filteredData.reduce((acc, task) => {
         const employeeId = task.assigned_to_id || task.userid;
         const employeeName = task.assigned_to_name || task.employee_name || "Unknown Employee";
-        
         if (!acc[employeeId]) {
           acc[employeeId] = {
             employeeId,
@@ -156,7 +162,6 @@ const ManagerTaskProgress = () => {
             tasks: []
           };
         }
-        
         const formattedTask = {
           ...task,
           id: task.taskid || task.id,
@@ -175,11 +180,9 @@ const ManagerTaskProgress = () => {
           employee_name: employeeName,
           assigned_to_id: employeeId
         };
-        
         acc[employeeId].tasks.push(formattedTask);
         return acc;
       }, {});
-
       Object.values(groupedTasks).forEach(employee => {
         employee.tasks.sort((a, b) => {
           const dateA = new Date(a.createdDate || a.created_date || a.date);
@@ -187,31 +190,18 @@ const ManagerTaskProgress = () => {
           return dateB - dateA; // Newest first
         });
       });
-      
       setEmployeeTasks(Object.values(groupedTasks));
     } catch (error) {
       toast.error(error.message);
     } finally {
       setLoading(false);
     }
-  }, []);
-
-  const mapStatusToColumn = (status) => {
-    if (!status) return "todo";
-    const statusLower = status.toLowerCase();
-    
-    if (statusLower === "pending" || statusLower === "todo" || statusLower === "to do") return "todo";
-    if (statusLower === "in progress" || statusLower === "in-progress" || statusLower === "ongoing") return "in-progress";
-    if (statusLower === "completed" || statusLower === "done" || statusLower === "complete") return "completed";
-    
-    return "todo";
-  };
+  }, [userId]);
 
   const updateTaskStatus = async (taskId, newStatus) => {
     const allTasks = employeeTasks.flatMap(emp => emp.tasks);
     const task = allTasks.find(t => t.id === taskId);
     if (!task) return;
-
     try {
       const response = await fetch(`${ipadr}/edit_task`, {
         method: "PUT",
@@ -230,13 +220,10 @@ const ManagerTaskProgress = () => {
           files: normalizeFiles(task.files)
         }),
       });
-
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.detail || "Failed to update task status");
       }
-
-      // Update local state
       setEmployeeTasks(prev => prev.map(emp => ({
         ...emp,
         tasks: emp.tasks.map(t => 
@@ -247,7 +234,6 @@ const ManagerTaskProgress = () => {
           return dateB - dateA;
         })
       })));
-
       toast.success(`Task moved to ${statusColumns.find(col => col.id === newStatus)?.title}`);
     } catch (error) {
       toast.error(error.message);
@@ -258,14 +244,12 @@ const ManagerTaskProgress = () => {
     fetchEmployeeTasks();
   }, [fetchEmployeeTasks]);
 
-  // Calculate overall statistics
   const overallStats = useMemo(() => {
     const allTasks = employeeTasks.flatMap(emp => emp.tasks);
     const total = allTasks.length;
     const todo = allTasks.filter(task => task.status === 'todo').length;
     const inProgress = allTasks.filter(task => task.status === 'in-progress').length;
     const completed = allTasks.filter(task => task.status === 'completed').length;
-    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const overdue = allTasks.filter(task => {
@@ -274,10 +258,8 @@ const ManagerTaskProgress = () => {
       dueDate.setHours(0, 0, 0, 0);
       return dueDate < today;
     }).length;
-    
     const highPriority = allTasks.filter(task => task.priority === 'high').length;
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-    
     return {
       total,
       todo,
@@ -291,11 +273,11 @@ const ManagerTaskProgress = () => {
   }, [employeeTasks]);
 
   const filteredEmployeeTasks = useMemo(() => {
-    return employeeTasks.map(emp => {
+    // First, filter tasks for each employee
+    let filtered = employeeTasks.map(emp => {
       const filteredTasks = emp.tasks.filter(task => {
         const taskText = typeof task.task === "string" ? task.task : "";
         const empName = typeof emp.employeeName === "string" ? emp.employeeName : "";
-
         if (
           searchTerm &&
           !taskText.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -303,20 +285,17 @@ const ManagerTaskProgress = () => {
         ) {
           return false;
         }
-
         if (filters.status !== 'all' && task.status !== filters.status) {
           return false;
         }
-
-        if (filters.priority !== 'all' && task.priority !== filters.priority) {
+        // Fix: Normalize priority to lowercase for comparison
+        if (filters.priority !== 'all' && String(task.priority).toLowerCase() !== filters.priority) {
           return false;
         }
-
         if (filters.dateRange !== 'all') {
           const today = new Date();
           const taskDate = new Date(task.createdDate);
           const diffDays = Math.ceil((today - taskDate) / (1000 * 60 * 60 * 24));
-
           switch (filters.dateRange) {
             case 'today':
               if (diffDays !== 0) return false;
@@ -329,21 +308,53 @@ const ManagerTaskProgress = () => {
               break;
           }
         }
-
         return true;
       }).sort((a, b) => {
         const dateA = new Date(a.createdDate || a.created_date || a.date);
         const dateB = new Date(b.createdDate || b.created_date || b.date);
         return dateB - dateA;
       });
-
       return { ...emp, tasks: filteredTasks };
-    }).filter(emp => emp.tasks.length > 0 || filters.employee === 'all');
+    });
+
+    // Fix: If searching for employee or task, only show employees with matches
+    if (searchTerm) {
+      // Only show employees with at least one matching task or name
+      filtered = filtered.filter(emp => {
+        const empName = typeof emp.employeeName === "string" ? emp.employeeName : "";
+        const matchesEmployee = empName.toLowerCase().includes(searchTerm.toLowerCase());
+        return emp.tasks.length > 0 || matchesEmployee;
+      });
+      // If only one employee matches by name, show only that employee
+      const matchingByName = filtered.filter(emp => {
+        const empName = typeof emp.employeeName === "string" ? emp.employeeName : "";
+        return empName.toLowerCase().includes(searchTerm.toLowerCase());
+      });
+      if (matchingByName.length === 1) {
+        filtered = matchingByName;
+      }
+    } else {
+      // If not searching, only show employees with tasks (or all if filter allows)
+      filtered = filtered.filter(emp => emp.tasks.length > 0 || filters.employee === 'all');
+    }
+    return filtered;
   }, [employeeTasks, filters, searchTerm]);
 
-  // Navigate to task detail page
+  // Navigation logic based on role
   const openTaskDetail = (task) => {
-    navigate(`/User/hr-task-detail/${task.taskid}`);
+    if (LS.get("position") === "Manager") {
+      navigate(`/User/manager-task-detail/${task.taskid}`);
+    } else {
+       navigate(`/User/hr-task-detail/${task.taskid}`);
+    }
+  };
+
+  const handleAssignTask = () => {
+    if (LS.get("position") === "Manager") {
+       navigate(`/User/employee-task-assign`);
+    } else {
+     navigate(`/User/manager-task-assign`);
+    }
   };
 
   const toggleEmployeeExpansion = (employeeId) => {
@@ -358,17 +369,12 @@ const ManagerTaskProgress = () => {
     });
   };
 
-  const handleAssignTask = () => {
-    navigate(`/User/manager-task-assign`);
-  };
-
-  // Enhanced Task Card for Manager View
-  const ManagerTaskCard = ({ task, employeeName }) => {
+  // Task Card (shared)
+  const TaskCard = ({ task, employeeName }) => {
     const isCompleted = task.status === 'completed';
     const dueDateStatus = getDueDateStatus(task.due_date, isCompleted);
     const subtaskProgress = task.subtasks.length > 0 ? 
       (task.subtasks.filter(st => st.completed).length / task.subtasks.length) * 100 : 0;
-    
     return (
       <div
         onClick={() => openTaskDetail(task)}
@@ -388,7 +394,6 @@ const ManagerTaskProgress = () => {
             )}
           </div>
         )}
-
         <div className="flex justify-between items-start mb-3">
           <h4 className="font-semibold text-gray-800 text-sm leading-tight pr-2 flex-1">{task.task}</h4>
           <div className="flex flex-col gap-1 items-end">
@@ -401,18 +406,15 @@ const ManagerTaskProgress = () => {
             </span>
           </div>
         </div>
-
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <FaUser className="text-gray-400" />
             <span className="font-medium text-blue-600">{employeeName}</span>
           </div>
-          
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority] || priorityColors.medium}`}>
             {task.priority?.toUpperCase() || 'MEDIUM'}
           </span>
         </div>
-
         {task.due_date && (
           <div className="flex items-center gap-2 mb-3">
             <p className={`text-xs flex items-center gap-1 ${
@@ -422,11 +424,10 @@ const ManagerTaskProgress = () => {
               'text-gray-600'
             }`}>
               <FaClock className="text-xs" />
-              Due: {task.due_date}
+              Due: {task.due_date ? formatDate(task.due_date) : ''}
             </p>
           </div>
         )}
-
         {/* Progress Indicators */}
         <div className="space-y-2 mb-3">
           {task.subtasks && task.subtasks.length > 0 && (
@@ -444,7 +445,6 @@ const ManagerTaskProgress = () => {
             </div>
           )}
         </div>
-
         {/* Activity Summary */}
         <div className="flex justify-between items-center text-xs text-gray-500 border-t pt-2">
           <span className="flex items-center gap-1">
@@ -468,7 +468,6 @@ const ManagerTaskProgress = () => {
             )}
           </div>
         </div>
-
         {/* Quick Actions */}
         <div className="flex items-center justify-between mt-3 pt-2 border-t">
           <div className="flex items-center gap-2">
@@ -482,19 +481,6 @@ const ManagerTaskProgress = () => {
               <FaEye /> View Details
             </button>
           </div>
-          <select
-            value={task.status}
-            onChange={(e) => {
-              e.stopPropagation();
-              updateTaskStatus(task.id, e.target.value);
-            }}
-            className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <option value="todo">To Do</option>
-            <option value="in-progress">In Progress</option>
-            <option value="completed">Completed</option>
-          </select>
         </div>
       </div>
     );
@@ -505,7 +491,7 @@ const ManagerTaskProgress = () => {
       <div className="flex justify-center items-center h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <div className="text-xl text-gray-600">Loading manager tasks...</div>
+          <div className="text-xl text-gray-600">Loading tasks...</div>
         </div>
       </div>
     );
@@ -524,13 +510,12 @@ const ManagerTaskProgress = () => {
         draggable
         pauseOnHover
       />
-      
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">Manager Task Progress</h2>
-            <p className="text-gray-600 mt-1">Monitor and manage all manager task progress</p>
+            <h2 className="text-3xl font-bold text-gray-800">{(LS.get("position") === "HR") ? "Manager Task Progress" : "Employee Task Progress"}</h2>
+            <p className="text-gray-600 mt-1">Monitor and manage all {(LS.get("position") === "HR")  ? "manager" : "employee"} task progress</p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -540,7 +525,6 @@ const ManagerTaskProgress = () => {
               <FaPlus />
               Assign Task
             </button>
-            
             <button
               onClick={() => setShowProgress(!showProgress)}
               className={`px-6 py-3 rounded-lg transition-all duration-300 font-medium flex items-center gap-2 ${
@@ -554,18 +538,15 @@ const ManagerTaskProgress = () => {
             </button>
           </div>
         </div>
-
         {/* Progress Section - Conditionally Rendered */}
         {showProgress && (
           <div className="relative mb-6 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200 shadow-lg">
-            
             {/* Header with inline progress */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <FaChartLine className="text-2xl text-blue-600" />
                 <h3 className="text-xl font-bold text-gray-800">Team Performance Overview</h3>
               </div>
-
               {/* Small compact progress */}
               <div className="flex flex-col items-end w-36">
                 <span className="text-xs font-semibold text-gray-700 mb-1">
@@ -579,12 +560,11 @@ const ManagerTaskProgress = () => {
                 </div>
               </div>
             </div>
-
             {/* Overall Statistics Dashboard */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl shadow-sm border border-blue-200 text-center">
                 <div className="text-2xl font-bold text-blue-700 mb-1">{overallStats.totalEmployees}</div>
-                <div className="text-sm font-medium text-blue-600">Manager</div>
+                <div className="text-sm font-medium text-blue-600">{(LS.get("position") === "HR")  ? "Manager" : "Employees"}</div>
               </div>
               <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl shadow-sm border border-gray-200 text-center">
                 <div className="text-2xl font-bold text-gray-700 mb-1">{overallStats.total}</div>
@@ -617,7 +597,6 @@ const ManagerTaskProgress = () => {
             </div>
           </div>
         )}
-
         {/* Filters and Search */}
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -634,7 +613,6 @@ const ManagerTaskProgress = () => {
                 />
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
               <select
@@ -648,7 +626,6 @@ const ManagerTaskProgress = () => {
                 <option value="completed">Completed</option>
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
               <select
@@ -662,7 +639,6 @@ const ManagerTaskProgress = () => {
                 <option value="high">High Priority</option>
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
               <select
@@ -676,7 +652,6 @@ const ManagerTaskProgress = () => {
                 <option value="month">This Month</option>
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Actions</label>
               <button
@@ -692,13 +667,12 @@ const ManagerTaskProgress = () => {
           </div>
         </div>
       </div>
-
       {/* Employee Task Lists */}
       <div className="p-6 space-y-6">
         {filteredEmployeeTasks.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📋</div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No manager tasks found</h3>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">No tasks found</h3>
             <p className="text-gray-500">No tasks match your current filters or search criteria.</p>
           </div>
         ) : (
@@ -718,7 +692,6 @@ const ManagerTaskProgress = () => {
               }).length,
               progress: employee.tasks.length > 0 ? Math.round((employee.tasks.filter(t => t.status === 'completed').length / employee.tasks.length) * 100) : 0
             };
-
             return (
               <div key={employee.employeeId} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 {/* Employee Header */}
@@ -736,7 +709,6 @@ const ManagerTaskProgress = () => {
                         <p className="text-blue-600 font-medium">{employee.tasks.length} assigned tasks</p>
                       </div>
                     </div>
-
                     <div className="flex items-center gap-6">
                       {/* Employee Stats */}
                       <div className="hidden md:flex items-center gap-4 text-sm">
@@ -757,7 +729,6 @@ const ManagerTaskProgress = () => {
                           <div className="text-gray-600">Progress</div>
                         </div>
                       </div>
-
                       {/* Progress Circle */}
                       <div className="relative w-16 h-16">
                         <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
@@ -779,7 +750,6 @@ const ManagerTaskProgress = () => {
                           <span className="text-sm font-bold text-blue-600">{employeeStats.progress}%</span>
                         </div>
                       </div>
-
                       {/* Expand/Collapse Icon */}
                       {isExpanded ? (
                         <FaChevronUp className="text-blue-600 text-xl" />
@@ -788,7 +758,6 @@ const ManagerTaskProgress = () => {
                       )}
                     </div>
                   </div>
-
                   {/* Progress Bar */}
                   <div className="mt-4">
                     <div className="w-full bg-blue-200 rounded-full h-2">
@@ -799,19 +768,18 @@ const ManagerTaskProgress = () => {
                     </div>
                   </div>
                 </div>
-
                 {/* Employee Tasks */}
                 {isExpanded && (
                   <div className="p-6">
                     {employee.tasks.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <FaClipboardList className="text-4xl mx-auto mb-2 opacity-50" />
-                        <p>No tasks for this manager matching current filters</p>
+                        <p>No tasks for this {(LS.get("position") === "Manager")  ? "manager" : "employee"} matching current filters</p>
                       </div>
                     ) : (
                       <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
                         {employee.tasks.map((task) => (
-                          <ManagerTaskCard 
+                          <TaskCard 
                             key={task.id} 
                             task={task} 
                             employeeName={employee.employeeName} 
@@ -830,4 +798,4 @@ const ManagerTaskProgress = () => {
   );
 };
 
-export default ManagerTaskProgress;
+export default TaskProgress;
