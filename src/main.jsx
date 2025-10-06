@@ -431,7 +431,7 @@ import AddLeave from "./components/Adminfrontend/AddLeave";
 import AttendanceStats from "./components/AttendanceStats";
 import LeaveDetails from "./components/Adminfrontend/LeaveDetails";
 import RemoteDetails from "./components/Adminfrontend/RemoteDetails";
-import Chat from './components/chat';
+import Chat from './components/Chat';
 import OnboardingDocs from './components/OnboardingDocs';
 import HRDocsReview from './components/Adminfrontend/AdminDocsReview';
 
