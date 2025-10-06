@@ -980,7 +980,7 @@ const mapStatusToColumn = (status) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("uploaded_by", `${LS.get("name")} (${LS.get("position")})`);
+      formData.append("uploaded_by", LS.get("userid"));
 
       const res = await fetch(`${ipadr}/task/${task.id}/files`, {
         method: "POST",
@@ -988,7 +988,7 @@ const mapStatusToColumn = (status) => {
       });
       
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail);
+      if (!res.ok) throw new Error(data.detail || "File upload failed");
 
       const uploadedFile = data.file;
 
@@ -1000,7 +1000,8 @@ const mapStatusToColumn = (status) => {
       setTask(updatedTask);
       toast.success("File uploaded successfully!");
     } catch (err) {
-      toast.error(err.message);
+      console.error("File upload error:", err);
+      toast.error(err.message || "Failed to upload file");
       fetchTaskDetails(); // Refresh on error
     }
 
