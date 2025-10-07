@@ -11,7 +11,6 @@ import { Authdata } from "../Utils/Authprovider";
 import { Apisignin } from "../Api/Loginauth";
 import { jwtDecode } from "jwt-decode";
 import { LS } from "../Utils/Resuse";
-import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -65,7 +64,7 @@ const handleGoogleLogin = async (credentialResponse) => {
       email: userDecode.email
     });
 
-    // Call backend
+    // Call backend - this will throw an error if user is not authorized
     const res = await Apisignin({
       client_name: userDecode.name,
       email: userDecode.email,
@@ -102,11 +101,13 @@ const handleGoogleLogin = async (credentialResponse) => {
     console.log("Navigation check:", { loggedIn, isAdmin });
 
     if (loggedIn && isAdmin) {
-      navigate("admin/time", {
+      toast.success("Welcome Admin!");
+      navigate("/admin/time", {
         state: { userid: res._id || res.id, token: res.access_token },
       });
     } else if (loggedIn && !isAdmin) {
-      navigate("User/Clockin_int", {
+      toast.success("Welcome!");
+      navigate("/User/Clockin_int", {
         state: { userid: res._id || res.id, token: res.access_token },
       });
     } else {
@@ -114,7 +115,15 @@ const handleGoogleLogin = async (credentialResponse) => {
     }
   } catch (err) {
     console.error("Login error:", err);
-    toast.error("An error occurred during login. Please try again.");
+    // Ensure a toast is shown in the UI for denied access or other login errors
+    try {
+      const raw = (err && err.response && err.response.data && err.response.data.detail) || (err && err.message) || "Login failed. Contact admin.";
+      const concise = raw && raw.length > 60 ? raw.split('.').slice(0,1).join('.') : raw;
+      // Show a concise toast for denied access
+      toast.error(concise || "Access denied. Contact admin.", { autoClose: 4000, position: 'top-right' });
+    } catch (e) {
+      toast.error("Access denied. Contact admin.", { autoClose: 4000, position: 'top-right' });
+    }
   }
 };
 
@@ -146,55 +155,15 @@ const handleGoogleLogin = async (credentialResponse) => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden w-full max-w-lg">
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden w-full max-w-sm">
         <div className="flex flex-col items-center justify-center p-8">
-          {/* Logo + Title */}
-          <div className="text-center mb-6">
-            <img src={logo} alt="Company Logo" className="h-32 mx-auto" />
-            <h1 className="text-2xl font-bold text-gray-700 mt-4">
-              Welcome to E-Connect
-            </h1>
-          </div>
-
-          {/* Google Login */}
-          <div className="w-full">
-            <h2 className="text-xl font-semibold text-gray-600 mb-4 text-center">
-              Sign in with Google
-            </h2>
-            <div className="flex justify-center">
-              <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-                <GoogleLogin onSuccess={handleGoogleLogin} />
-              </GoogleOAuthProvider>
-            </div>
-          </div>
-
-          {/* OR Divider */}
-          <div className="flex items-center my-6 w-full">
-            <div className="flex-grow border-t border-gray-300"></div>
-            <span className="mx-3 text-gray-500 text-sm">OR</span>
-            <div className="flex-grow border-t border-gray-300"></div>
-          </div>
-
-          {/* Links to normal login/signup */}
-          <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              Prefer Email/Password?{" "}
-              <Link to="/signin" className="text-blue-500 font-medium hover:underline">
-                Sign In
-              </Link>
-            </p>
-            <p className="text-sm text-gray-600">
-              New here?{" "}
-              <Link to="/signup" className="text-blue-500 font-medium hover:underline">
-                Create Account
-              </Link>
-            </p>
-          </div>
+          <img src={logo} alt="Company Logo" className="h-32 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-700 mb-6">Welcome to E-Connect</h1>
+          <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+            <GoogleLogin onSuccess={handleGoogleLogin} />
+          </GoogleOAuthProvider>
         </div>
       </div>
-
-      
-      
     </div>
   );
 }
