@@ -7,7 +7,7 @@ import {
   FaCalendarAlt, FaUserTie, FaClipboardList, FaChartLine, FaPlus
 } from "react-icons/fa";
 import { LS, ipadr } from "../Utils/Resuse";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import moment from "moment";
 
@@ -499,17 +499,6 @@ const TaskProgress = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">
         <div className="flex justify-between items-center mb-6">

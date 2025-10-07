@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarPlus, faTrash, faSave, faPlus, faCalendarAlt, faExclamationTriangle, faTimes, faCheck } from '@fortawesome/free-solid-svg-icons';
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { LS, ipadr } from '../../Utils/Resuse';
 
@@ -482,19 +482,6 @@ const AddLeave = () => {
           </div>
         )}
       </div>
-
-      {/* Toast Container */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
     </div>
   );
 };

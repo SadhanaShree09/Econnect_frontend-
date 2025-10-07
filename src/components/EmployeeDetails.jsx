@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 
 const EmployeeDetails = () => {
     const [error, setError] = useState(null);
@@ -439,7 +439,6 @@ const EmployeeDetails = () => {
                     Confirm
                 </button>
             </form>
-            <ToastContainer />
         </div>
     );
 };

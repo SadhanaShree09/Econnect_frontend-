@@ -701,7 +701,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaTrashAlt, FaEdit, FaCheckCircle, FaRegCircle, FaTimes, FaPaperclip, FaDownload, FaUser, FaFlag, FaExclamationTriangle, FaClock, FaChartLine, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { LS, ipadr } from "../Utils/Resuse";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
@@ -1292,17 +1292,6 @@ const TaskPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
       
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">

@@ -1,7 +1,7 @@
 import Headlogo from "../assets/rbg2.png";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FiLogOut, FiUser } from "react-icons/fi";
 import { LS } from "../Utils/Resuse";
@@ -470,8 +470,6 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
         onConfirm={handleLogoutConfirm}
         message="Are you sure you want to logout?"
       />
-
-      <ToastContainer position="top-right" autoClose={1000} hideProgressBar theme="light" />
     </div>
   );
 };

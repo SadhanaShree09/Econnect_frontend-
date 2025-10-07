@@ -386,6 +386,8 @@
 import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter,createBrowserRouter, Outlet, Route, RouterProvider, Routes } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 import App from "./App";
 import Clockin from "./components/Clockin";
@@ -743,19 +745,32 @@ const MainApp = () => {
   }, []);
 
   return (
-    <RouterProvider router={router}>
-      <Outlet />
-      <BrowserRouter>
-      <Routes>
-        <Route path="/admin/employee" element={<Employeelist/>}/>
-        <Route path="/admin/employee/:id" element={<EmployeeDetails/>}/>
-      </Routes>
+    <>
+      <RouterProvider router={router}>
+        <Outlet />
+        <BrowserRouter>
+        <Routes>
+          <Route path="/admin/employee" element={<Employeelist/>}/>
+          <Route path="/admin/employee/:id" element={<EmployeeDetails/>}/>
+        </Routes>
+        
+        </BrowserRouter>
+      </RouterProvider>
       
-      </BrowserRouter>
-    </RouterProvider>
-   
-
-    
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss={false}
+        draggable
+        pauseOnHover
+        theme="light"
+        limit={3}
+      />
+    </>
   );
   //return <RouterProvider router={router} />;
 };

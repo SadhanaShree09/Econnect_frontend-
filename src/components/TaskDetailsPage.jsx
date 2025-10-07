@@ -684,7 +684,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FaTrashAlt, FaEdit, FaCheckCircle, FaRegCircle, FaTimes, FaPaperclip, FaDownload, FaUser, FaFlag, FaExclamationTriangle, FaClock, FaArrowLeft, FaPlus } from "react-icons/fa";
 import { LS, ipadr } from "../Utils/Resuse";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const TaskDetailsPage = () => {
@@ -1075,17 +1075,6 @@ const mapStatusToColumn = (status) => {
   return (
     <div className="min-h-screen bg-gray-50 ">
 
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
 
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-2 sticky top-0 z-10 min-h-[70px]">

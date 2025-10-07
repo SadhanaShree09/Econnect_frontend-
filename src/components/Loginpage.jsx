@@ -3,7 +3,7 @@
 import React from "react";
 import logo from "../assets/logo.png";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./login.css";
 import { useNavigate } from "react-router-dom";
@@ -195,17 +195,6 @@ const handleGoogleLogin = async (credentialResponse) => {
 
       
       
-      <ToastContainer
-        position="bottom-center"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
     </div>
   );
 }

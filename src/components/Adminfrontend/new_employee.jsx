@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ipadr } from "../../Utils/Resuse";
 import { LS } from "../../Utils/Resuse";
@@ -138,7 +138,6 @@ const AddUser = () => {
   return (
     (Admin || Position === "HR") ?
     <div className="min-h-screen flex items-center justify-center">
-      <ToastContainer />
       <form
         className="bg-white p-6 rounded-lg shadow-md w-full max-w-6xl border"
         onSubmit={handleSubmit}

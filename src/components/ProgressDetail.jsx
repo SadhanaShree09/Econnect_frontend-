@@ -8,7 +8,7 @@ import {
   FaSave, FaUpload
 } from "react-icons/fa";
 import { LS, ipadr } from "../Utils/Resuse";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 /**
@@ -396,17 +396,6 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
       {/* Header - fixed at the top */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-2 sticky top-0 z-10 min-h-[70px]">
         <div className="flex items-center justify-between mb-2">

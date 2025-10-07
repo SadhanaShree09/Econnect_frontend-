@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, Link, Outlet, useNavigate } from "react-router-dom";
 import { AiOutlineMenuUnfold } from "react-icons/ai";
 import { FaClock, FaPlay, FaStop, FaSpinner, FaCheckCircle } from "react-icons/fa";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Baseaxios, LS } from "../Utils/Resuse";
 
@@ -264,18 +264,6 @@ function Clockin_int() {
         
         <Outlet />
       </div>
-
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
     </div>
   );
 }

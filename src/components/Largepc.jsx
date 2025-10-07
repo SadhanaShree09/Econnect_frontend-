@@ -2,7 +2,7 @@ import { useState } from "react";
 import bot1 from "../assets/login.gif.gif";
 import { Toaster } from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer, toast } from "react-toastify"
+import { toast } from "react-toastify"
 import { Apisignin, Apisignup } from "../Api/Loginauth";
 import { useNavigate } from "react-router-dom";
 import { Authdata } from "../Utils/Authprovider";
@@ -98,17 +98,6 @@ function Largepc({ log }) {
           </div>
         )}
       </div>
-      <ToastContainer
-        position="bottom-center"
-        autoClose={2000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
       {/* <Toaster position="bottom-center" reverseOrder={false} /> */}
     </div>
   );

@@ -10,7 +10,7 @@ import {
 } from "react-icons/fi";
 import { LS } from "../Utils/Resuse";
 import clsx from "clsx";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Picker from "emoji-picker-react";
 
@@ -598,7 +598,6 @@ export default function Chat() {
           </button>
         </div>
       </div>
-      <ToastContainer />
     </div>
   );
 }

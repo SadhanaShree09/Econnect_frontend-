@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaClock, FaSignInAlt, FaSignOutAlt, FaSpinner, FaCheckCircle, FaTimesCircle, FaCalendarDay } from "react-icons/fa";
 import { Baseaxios, LS  ,ipadr } from "../Utils/Resuse";
@@ -135,7 +135,7 @@ function Clockin() {
           setLogin(true);
           
           toast.success(`🎉 Successfully clocked in at ${formatTime(now)}!`, {
-            autoClose: 3000
+            autoClose: 2000
           });
           
           // Refresh status
@@ -194,7 +194,7 @@ function Clockin() {
             setLogin(false);
             
             toast.success(`✅ Successfully clocked out at ${formatTime(now)}!`, {
-              autoClose: 4000
+              autoClose: 2000
             });
             
             // Refresh status
@@ -202,7 +202,7 @@ function Clockin() {
           } else if (data.message.includes("Previous Day") || data.message.includes("previous day") || data.message.includes("incomplete")) {
             // User needs to use previous day clock-out
             toast.warning(`⚠️ ${data.message}`, {
-              autoClose: 10000
+              autoClose: 5000
             });
           } else if (data.message.includes("already clocked out") || data.message.includes("Already clocked out")) {
             toast.info(`ℹ️ ${data.message}`);
@@ -398,18 +398,6 @@ function Clockin() {
           </div>
         </>
       )}
-      
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
     </div>
   );
 }
