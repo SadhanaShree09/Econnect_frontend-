@@ -496,18 +496,18 @@ const NotificationDashboard = () => {
       // Navigate to the determined URL
       if (targetUrl) {
         console.log(`Navigating to: ${targetUrl} for notification type: ${notification.type} (HR: ${isHR}, Admin: ${isAdmin})`);
-        toast.dismiss(loadingToast);
+        if (loadingToast !== undefined) toast.dismiss(loadingToast);
         toast.success('Opening page...');
         navigate(targetUrl);
       } else {
-        toast.dismiss(loadingToast);
+        if (loadingToast !== undefined) toast.dismiss(loadingToast);
         console.warn('No target URL determined for notification:', notification);
         toast.error('Unable to navigate to the requested page');
       }
     } catch (error) {
-      toast.dismiss(loadingToast);
-      console.error('Error handling notification click:', error);
-      toast.error('Error opening notification');
+  if (loadingToast !== undefined) toast.dismiss(loadingToast);
+  console.error('Error handling notification click:', error);
+  toast.error('Error opening notification');
     }
   };
 
