@@ -251,6 +251,17 @@ function Clockin_int() {
             )}
           </div>
         </div>
+        
+        {/* Productivity Dashboard Header */}
+        {!showBackButton && (
+          <div className="text-center mb-6">
+            <div className="text-2xl font-bold text-blue-600 flex items-center justify-center space-x-2">
+              <FaClock />
+              <span>Productivity Dashboard</span>
+            </div>
+          </div>
+        )}
+        
         <Outlet />
       </div>
 
