@@ -353,6 +353,20 @@ const Timemanagement = () => {
     return `${year}-${month}-${day}`;
   };
 
+  const formatTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    try {
+      const date = new Date(timeString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return timeString;
+      // Format as HH:MM:SS AM/PM
+      return format(date, 'hh:mm:ss a');
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return timeString;
+    }
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -460,10 +474,10 @@ const Timemanagement = () => {
                           <div className="font-medium text-center">{row.name}</div>
                         </td>
                         <td scope="col" className="p-2 whitespace-nowrap">
-                          <div className="font-medium text-center">{row.clockin}</div>
+                          <div className="font-medium text-center">{formatTime(row.clockin)}</div>
                         </td>
                         <td scope="col" className="p-2 whitespace-nowrap">
-                          <div className="font-medium text-center">{row.clockout}</div>
+                          <div className="font-medium text-center">{formatTime(row.clockout)}</div>
                         </td>
                         <td scope="col" className="p-2 whitespace-nowrap">
                           <div className="font-medium text-center">{row.total_hours_worked}</div>
