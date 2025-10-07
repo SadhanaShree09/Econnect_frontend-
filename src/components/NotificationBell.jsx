@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaBell, FaCog } from 'react-icons/fa';
+import { FaBell } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { LS, ipadr } from '../Utils/Resuse';
 import { useNotificationWebSocket } from '../hooks/useNotificationWebSocket';
-import NotificationSettings from './NotificationSettings';
 
 const NotificationBell = ({ className = "" }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const navigate = useNavigate();
   const userid = LS.get('userid');
   
@@ -57,41 +55,21 @@ const NotificationBell = ({ className = "" }) => {
   }, [wsUnreadCount, isConnected, userid]);
 
   return (
-    <>
-      <div className={`flex items-center gap-2 ${className}`}>
-        {/* Notification Bell */}
-        <div className="relative cursor-pointer" onClick={handleBellClick}>
-          <FaBell 
-            className={`text-xl ${unreadCount > 0 ? 'text-yellow-400' : 'text-gray-300'} hover:text-yellow-300 transition-colors`}
-            title="Notifications"
-          />
-          {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-          {/* Connection status indicator */}
-          <div className={`absolute -bottom-1 -right-1 w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-gray-400'}`} 
-               title={isConnected ? 'Real-time connected' : 'Polling mode'}>
-          </div>
-        </div>
-
-        {/* Settings Icon */}
-        <div 
-          className="relative cursor-pointer"
-          onClick={() => setShowSettings(true)}
-          title="Notification Settings"
-        >
-          <FaCog className="text-lg text-gray-300 hover:text-blue-400 hover:rotate-90 transition-all duration-300" />
-        </div>
-      </div>
-
-      {/* Notification Settings Modal */}
-      <NotificationSettings 
-        isOpen={showSettings} 
-        onClose={() => setShowSettings(false)} 
+    <div className={`relative cursor-pointer ${className}`} onClick={handleBellClick}>
+      <FaBell 
+        className={`text-xl ${unreadCount > 0 ? 'text-yellow-400' : 'text-gray-300'} hover:text-yellow-300 transition-colors`}
+        title="Notifications"
       />
-    </>
+      {unreadCount > 0 && (
+        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </span>
+      )}
+      {/* Connection status indicator */}
+      <div className={`absolute -bottom-1 -right-1 w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-gray-400'}`} 
+           title={isConnected ? 'Real-time connected' : 'Polling mode'}>
+      </div>
+    </div>
   );
 };
 

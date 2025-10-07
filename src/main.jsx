@@ -437,7 +437,8 @@ import OnboardingDocs from './components/OnboardingDocs';
 import HRDocsReview from './components/Adminfrontend/AdminDocsReview';
 
 import Fileuploader from './components/Fileuploader';
-import NotificationPermissionPrompt from './components/NotificationPermissionPrompt';
+import GlobalNotificationToast from './components/GlobalNotificationToast';
+
 
 
 // Create a simple dashboard home component for admin
@@ -458,8 +459,8 @@ const DashboardPage = () => (
       >
         <Outlet />
       </div>
-      {/* Notification Permission Prompt */}
-      <NotificationPermissionPrompt />
+      {/* Global Toast Notifications */}
+      <GlobalNotificationToast />
     </div>
   </Checkauth>
 );
