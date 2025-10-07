@@ -17,69 +17,19 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { SetStatedata } = Authdata();
 
- const getIpInfo = async () => {
-    
-    
+  // Only fetch IP info, do not use credentialResponse here
+  const getIpInfo = async () => {
     try {
-      console.log("Starting Google login process...");
-
-      // Decode Google JWT
-      let userDecode = jwtDecode(credentialResponse.credential);
-      console.log("Google credentials decoded:", {
-        name: userDecode.name,
-        email: userDecode.email
-      });
-
-      // Call backend
-      const res = await Apisignin({
-        client_name: userDecode.name,
-        email: userDecode.email,
-      });
-      console.log("API signin response:", res);
-
-      // Store user data in localStorage
-      localStorage.setItem("userid", res._id || res.id);
-      localStorage.setItem("name", res.name);
-      localStorage.setItem("email", res.email);
-      localStorage.setItem("isloggedin", res.isloggedin.toString());
-      localStorage.setItem("isadmin", res.isadmin.toString());
-      localStorage.setItem("access_token", res.access_token);
-
-      // Also save using LS utility
-      LS.save("userid", res._id || res.id);
-      LS.save("name", res.name);
-      LS.save("email", res.email);
-      LS.save("access_token", res.access_token);
-      LS.save("Auth", true);
-
-      // Navigation based on user role
-      const loggedIn = res.isloggedin;
-      const isAdmin = res.isadmin;
-
-      console.log("Navigation check:", { loggedIn, isAdmin });
-
-      if (loggedIn && isAdmin) {
-        console.log("Navigating to admin dashboard");
-        navigate("admin/time", {
-          state: { userid: res._id || res.id, token: res.access_token },
-        });
-      } else if (loggedIn && !isAdmin) {
-        console.log("Navigating to user dashboard");
-        navigate("User/Clockin_int", {
-          state: { userid: res._id || res.id, token: res.access_token },
-        });
-      } else {
-        toast.error("Login failed. Please contact administrator.");
-      }
-
-      // Show success message
-      toast.success("Login successful!");
-      
+      // Example: fetch public IP from an API
+      const publicIpRes = await fetch("https://api64.ipify.org?format=json");
+      const publicIpData = await publicIpRes.json();
+      // For local IP, you may use a placeholder or a library if needed
+      return { publicIp: publicIpData.ip, localIp: null };
     } catch (err) {
-      console.error("Login error:", err);
-      toast.error("An error occurred during login. Please try again.");
+      console.error("Error fetching IP info:", err);
+      return { publicIp: null, localIp: null };
     }
-  };
+  }
   const validateIp = (userIp, currentIps) => {
     if (!userIp) {
       console.log("No IP validation needed - IP not present in response");
