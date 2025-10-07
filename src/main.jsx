@@ -423,7 +423,6 @@ import TaskAssign from './components/TaskAssign';
 import ProgressDetail from './components/ProgressDetail';
 import NotificationDashboard from "./components/NotificationDashboard";
 import EnhancedNotificationDashboard from "./components/EnhancedNotificationDashboard";
-import NotificationSystemTest from "./components/NotificationSystemTest";
 import ApiTest from "./components/ApiTest";
 import AdminAuth from "./Utils/AdminAuth";
 
@@ -438,6 +437,8 @@ import OnboardingDocs from './components/OnboardingDocs';
 import HRDocsReview from './components/Adminfrontend/AdminDocsReview';
 
 import Fileuploader from './components/Fileuploader';
+import NotificationPermissionPrompt from './components/NotificationPermissionPrompt';
+
 
 // Create a simple dashboard home component for admin
 const DashboardHome = () => (
@@ -457,6 +458,8 @@ const DashboardPage = () => (
       >
         <Outlet />
       </div>
+      {/* Notification Permission Prompt */}
+      <NotificationPermissionPrompt />
     </div>
   </Checkauth>
 );
@@ -693,10 +696,6 @@ const router = createBrowserRouter([
       {
         path: "enhanced-notifications",
         element: <EnhancedNotificationDashboard />,
-      },
-      {
-        path: "notification-test",
-        element: <NotificationSystemTest />,
       },
       {
         path:':id',

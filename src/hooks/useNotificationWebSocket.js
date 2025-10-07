@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { LS } from '../Utils/Resuse';
+import browserNotificationService from '../services/BrowserNotificationService';
 
 export const useNotificationWebSocket = () => {
   const [notifications, setNotifications] = useState([]);
@@ -98,26 +99,28 @@ export const useNotificationWebSocket = () => {
               // Update unread count
               setUnreadCount(prev => prev + 1);
               
-              // Show browser notification if permission granted
-              if (Notification.permission === 'granted' && data.data) {
-                try {
-                  const notification = new Notification(data.data.title || 'New E-Connect Notification', {
-                    body: data.data.message || '',
-                    icon: '/favicon.ico',
-                    tag: data.data._id,
-                    requireInteraction: false,
-                    silent: false
-                  });
-                  
-                  // Auto-close after 5 seconds
-                  setTimeout(() => notification.close(), 5000);
-                  
-                  console.log('🔔 Browser notification shown:', data.data.title);
-                } catch (error) {
-                  console.error('Error showing browser notification:', error);
-                }
-              } else {
-                console.log('🔕 Browser notifications not permitted or no data');
+              // Show enhanced browser notification using the service
+              if (data.data) {
+                browserNotificationService.showNotification({
+                  title: data.data.title || 'New E-Connect Notification',
+                  message: data.data.message || '',
+                  type: data.data.type || 'info',
+                  tag: data.data._id,
+                  requireInteraction: data.data.priority === 'high',
+                  silent: false,
+                  autoClose: true,
+                  data: data.data,
+                  onClick: () => {
+                    // Focus window and navigate to notifications
+                    window.focus();
+                    // You can emit a custom event here to navigate
+                    window.dispatchEvent(new CustomEvent('notification-clicked', { 
+                      detail: data.data 
+                    }));
+                  }
+                });
+                
+                console.log('� Enhanced browser notification shown:', data.data.title);
               }
             } else {
               console.warn('WebSocket: Received notification for different user:', {
@@ -208,24 +211,9 @@ export const useNotificationWebSocket = () => {
     setTimeout(connect, 100);
   }, [disconnect, connect]);
 
-  // Request notification permission
+  // Request notification permission using the service
   const requestNotificationPermission = useCallback(async () => {
-    if (!('Notification' in window)) {
-      console.log('Browser does not support notifications');
-      return false;
-    }
-
-    if (Notification.permission === 'default') {
-      try {
-        const permission = await Notification.requestPermission();
-        return permission === 'granted';
-      } catch (error) {
-        console.error('Error requesting notification permission:', error);
-        return false;
-      }
-    }
-    
-    return Notification.permission === 'granted';
+    return await browserNotificationService.requestPermission();
   }, []);
 
   useEffect(() => {

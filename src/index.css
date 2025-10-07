@@ -44,6 +44,17 @@
   }
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes fadeInScale {
   from {
     opacity: 0;
@@ -75,6 +86,10 @@
 
 .notification-enter {
   animation: slideInUp 0.4s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out;
 }
 
 .notification-card-hover {
