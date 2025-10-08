@@ -108,7 +108,7 @@ const EmployeeDetails = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const clientIP = "127.0.0.1"; 
+        //const clientIP = "127.0.0.1"; 
 
         const payload = {
             userid: employeeData.userid,
@@ -132,7 +132,7 @@ const EmployeeDetails = () => {
                     level: parseInt(skill.level) || 0,
                 })),
             status: employeeData.status, // Added status field
-            ip: clientIP, // Added required IP field
+            //ip: clientIP, // Added required IP field
         };
 
         console.log("Payload:", payload);
