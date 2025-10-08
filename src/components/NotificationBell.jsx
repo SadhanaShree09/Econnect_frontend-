@@ -34,7 +34,12 @@ const NotificationBell = ({ className = "" }) => {
 
   // Handle bell click
   const handleBellClick = () => {
-    navigate('/User/notifications');
+    const isAdmin = LS.get('isadmin');
+    if (isAdmin) {
+      navigate('/admin/notifications');
+    } else {
+      navigate('/User/notifications');
+    }
   };
 
   useEffect(() => {
