@@ -164,9 +164,9 @@ const EnhancedNotificationDashboard = () => {
       } else {
         // Default navigation based on type
         const defaultUrls = {
-          task: isAdmin ? '/admin/task' : '/User/task',
-          task_overdue: isAdmin ? '/admin/task' : '/User/task',
-          task_due_soon: isAdmin ? '/admin/task' : '/User/task',
+          task: isAdmin ? '/admin/task' : '/user/todo',
+          task_overdue: isAdmin ? '/admin/task' : '/user/todo',
+          task_due_soon: isAdmin ? '/admin/task' : '/user/todo',
           leave: isAdmin ? '/admin/leaveapproval' : '/User/LeaveHistory',
           wfh: isAdmin ? '/admin/wfh' : '/User/Workfromhome',
           attendance: isAdmin ? '/admin/time' : '/User/Clockin_int',

@@ -48,7 +48,7 @@ const ViewAssignedTask=()=>{
                         <h1 className="text-5xl font-semibold font-inter pb-2 text-transparent bg-gradient-to-r from-zinc-600 to-zinc-950 bg-clip-text border-b-2">
                             Tasks you have assigned
                         </h1>
-                         <Link to={`/User/taskassgn`}>
+                         <Link to={`/user/todoassgn`}>
                                  <div className="">
                                     <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg absolute top-[95px] right-[10px] ">
                                         Back

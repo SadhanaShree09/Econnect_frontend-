@@ -356,11 +356,11 @@ const NotificationDashboard = () => {
               targetUrl = isAdminLevel ? '/admin/viewtask' : '/User/viewtask';
             } else {
               // For other task notifications, navigate to main task page
-              targetUrl = isAdminLevel ? '/admin/task' : '/User/task';
+              targetUrl = isAdminLevel ? '/admin/task' : '/user/todo';
             }
           } else {
             // Fallback to main task page
-            targetUrl = isAdminLevel ? '/admin/task' : '/User/task';
+            targetUrl = isAdminLevel ? '/admin/task' : '/user/todo';
           }
           break;
 
@@ -472,7 +472,7 @@ const NotificationDashboard = () => {
               } else if (actionUrl.includes('wfh')) {
                 actionUrl = '/User/Remote_details';
               } else if (actionUrl.includes('task') || actionUrl.includes('Task')) {
-                actionUrl = '/User/task';
+                actionUrl = '/User/todo';
               }
             } else if (actionUrl.startsWith('/HR/') && isAdminLevel) {
               // Map old HR URLs to admin equivalents
