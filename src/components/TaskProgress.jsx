@@ -7,7 +7,7 @@ import {
   FaCalendarAlt, FaUserTie, FaClipboardList, FaChartLine, FaPlus
 } from "react-icons/fa";
 import { LS, ipadr } from "../Utils/Resuse";
-import { toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import moment from "moment";
 
@@ -67,6 +67,8 @@ const TaskProgress = () => {
     return dateStr;
   };
   const navigate = useNavigate();
+  const headerRef = useRef(null);
+
   const [employeeTasks, setEmployeeTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
@@ -78,6 +80,7 @@ const TaskProgress = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedEmployees, setExpandedEmployees] = useState(new Set());
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
 
   // Auto-detect role
   const userRole = LS.get("role") || "employee"; // fallback to employee
@@ -202,6 +205,11 @@ const TaskProgress = () => {
     const allTasks = employeeTasks.flatMap(emp => emp.tasks);
     const task = allTasks.find(t => t.id === taskId);
     if (!task) return;
+    // Prevent status changes for verified tasks
+    if (task.verified) {
+      toast.error('This task is verified and cannot be moved. Unverify first to change status.');
+      return;
+    }
     try {
       const response = await fetch(`${ipadr}/edit_task`, {
         method: "PUT",
@@ -244,6 +252,17 @@ const TaskProgress = () => {
     fetchEmployeeTasks();
   }, [fetchEmployeeTasks]);
 
+  // Keep a CSS variable with the header height so scrollable areas can account for it
+  useEffect(() => {
+    const setHeaderVar = () => {
+      const h = headerRef.current ? headerRef.current.offsetHeight : 0;
+      document.documentElement.style.setProperty('--tp-header-height', `${h}px`);
+    };
+    setHeaderVar();
+    window.addEventListener('resize', setHeaderVar);
+    return () => window.removeEventListener('resize', setHeaderVar);
+  }, [showProgress, searchTerm, filters]);
+
   const overallStats = useMemo(() => {
     const allTasks = employeeTasks.flatMap(emp => emp.tasks);
     const total = allTasks.length;
@@ -285,9 +304,16 @@ const TaskProgress = () => {
         ) {
           return false;
         }
-        if (filters.status !== 'all' && task.status !== filters.status) {
-          return false;
-        }
+        if (filters.status !== 'all') {
+  if (filters.status === 'verified') {
+    // show only verified tasks
+    if (!task.verified) return false;
+  } else {
+    // normal status filter
+    if (task.status !== filters.status) return false;
+  }
+}
+
         // Fix: Normalize priority to lowercase for comparison
         if (filters.priority !== 'all' && String(task.priority).toLowerCase() !== filters.priority) {
           return false;
@@ -342,10 +368,14 @@ const TaskProgress = () => {
 
   // Navigation logic based on role
   const openTaskDetail = (task) => {
+    // Prevent opening edit/detail if task is verified and the user would attempt edits
+    if (task.verified) {
+      // allow viewing details but block edit actions within those pages; still navigate to show the badge
+    }
     if (LS.get("position") === "Manager") {
-      navigate(`/User/manager-task-detail/${task.taskid}`);
+      navigate(`/User/manager-task-detail/${task.taskid}`, { state: { task } });
     } else {
-       navigate(`/User/hr-task-detail/${task.taskid}`);
+       navigate(`/User/hr-task-detail/${task.taskid}`, { state: { task } });
     }
   };
 
@@ -357,17 +387,19 @@ const TaskProgress = () => {
     }
   };
 
+  // Make expansion single-selection: selecting an employee opens its detail in the right pane
   const toggleEmployeeExpansion = (employeeId) => {
-    setExpandedEmployees(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(employeeId)) {
-        newSet.delete(employeeId);
-      } else {
-        newSet.add(employeeId);
-      }
-      return newSet;
-    });
+    setSelectedEmployeeId(prev => prev === employeeId ? null : employeeId);
+    setExpandedEmployees(() => new Set([employeeId]));
   };
+
+  // When the filtered employee list changes, ensure there is a sensible default selection
+  useEffect(() => {
+    if (!selectedEmployeeId && filteredEmployeeTasks && filteredEmployeeTasks.length > 0) {
+      setSelectedEmployeeId(filteredEmployeeTasks[0].employeeId);
+      setExpandedEmployees(new Set([filteredEmployeeTasks[0].employeeId]));
+    }
+  }, [filteredEmployeeTasks]);
 
   // Task Card (shared)
   const TaskCard = ({ task, employeeName }) => {
@@ -395,7 +427,7 @@ const TaskProgress = () => {
           </div>
         )}
         <div className="flex justify-between items-start mb-3">
-          <h4 className="font-semibold text-gray-800 text-sm leading-tight pr-2 flex-1">{task.task}</h4>
+          <h4 className="font-semibold text-gray-800 text-sm leading-tight pr-2 flex-1 line-clamp-2 break-words">{task.task}</h4>
           <div className="flex flex-col gap-1 items-end">
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
               task.status === 'todo' ? 'bg-red-200 text-red-700' :
@@ -404,6 +436,11 @@ const TaskProgress = () => {
             }`}>
               {statusColumns.find(col => col.id === task.status)?.title}
             </span>
+            {task.verified && (
+              <span className="mt-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-700 text-white">
+                Verified
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center justify-between mb-3">
@@ -498,10 +535,21 @@ const TaskProgress = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 p-6">
-        <div className="flex justify-between items-center mb-6">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      {/* Header (sticky, compact) */}
+      <div ref={headerRef} className="bg-white shadow-sm border-b border-gray-200 p-4 shrink-0">
+        <div className="flex justify-between items-center mb-3">
           <div>
             <h2 className="text-3xl font-bold text-gray-800">{(LS.get("position") === "HR") ? "Manager Task Progress" : "Employee Task Progress"}</h2>
             <p className="text-gray-600 mt-1">Monitor and manage all {(LS.get("position") === "HR")  ? "manager" : "employee"} task progress</p>
@@ -529,65 +577,87 @@ const TaskProgress = () => {
         </div>
         {/* Progress Section - Conditionally Rendered */}
         {showProgress && (
-          <div className="relative mb-6 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200 shadow-lg">
-            {/* Header with inline progress */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <FaChartLine className="text-2xl text-blue-600" />
-                <h3 className="text-xl font-bold text-gray-800">Team Performance Overview</h3>
-              </div>
-              {/* Small compact progress */}
-              <div className="flex flex-col items-end w-36">
-                <span className="text-xs font-semibold text-gray-700 mb-1">
-                  {overallStats.completed}/{overallStats.total} completed
-                </span>
-                <div className="w-full bg-gray-300 rounded-full h-2">
-                  <div
-                    className="h-2 rounded-full bg-green-500 transition-all duration-500"
-                    style={{ width: `${overallStats.completionRate}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-            {/* Overall Statistics Dashboard */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl shadow-sm border border-blue-200 text-center">
-                <div className="text-2xl font-bold text-blue-700 mb-1">{overallStats.totalEmployees}</div>
-                <div className="text-sm font-medium text-blue-600">{(LS.get("position") === "HR")  ? "Manager" : "Employees"}</div>
-              </div>
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl shadow-sm border border-gray-200 text-center">
-                <div className="text-2xl font-bold text-gray-700 mb-1">{overallStats.total}</div>
-                <div className="text-sm font-medium text-gray-600">Total Tasks</div>
-              </div>
-              <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-xl shadow-sm border border-red-200 text-center">
-                <div className="text-2xl font-bold text-red-700 mb-1">{overallStats.todo}</div>
-                <div className="text-sm font-medium text-red-600">To Do</div>
-              </div>
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl shadow-sm border border-blue-200 text-center">
-                <div className="text-2xl font-bold text-blue-700 mb-1">{overallStats.inProgress}</div>
-                <div className="text-sm font-medium text-blue-600">In Progress</div>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl shadow-sm border border-green-200 text-center">
-                <div className="text-2xl font-bold text-green-700 mb-1">{overallStats.completed}</div>
-                <div className="text-sm font-medium text-green-600">Completed</div>
-              </div>
-              <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-xl shadow-sm border border-red-200 text-center">
-                <div className="text-2xl font-bold text-red-700 mb-1">{overallStats.overdue}</div>
-                <div className="text-sm font-medium text-red-600">Overdue</div>
-              </div>
-              <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl shadow-sm border border-green-200 text-center">
-                <div className="text-2xl font-bold text-green-700 mb-1">{overallStats.highPriority}</div>
-                <div className="text-sm font-medium text-green-600">High Priority</div>
-              </div>
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-4 rounded-xl shadow-sm border border-indigo-200 text-center">
-                <div className="text-2xl font-bold text-indigo-700 mb-1">{overallStats.completionRate}%</div>
-                <div className="text-sm font-medium text-indigo-600">Overall Progress</div>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Filters and Search */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
+  <div className="relative mb-3 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-2 border border-blue-200 shadow-md overflow-hidden">
+    {/* Header with inline progress */}
+    <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center gap-2">
+        <FaChartLine className="text-lg text-blue-600" />
+        <h3 className="text-base font-semibold text-gray-800 leading-snug">
+          Team Performance Overview
+        </h3>
+      </div>
+      {/* Compact progress bar */}
+      <div className="flex flex-col items-end w-28">
+        <span className="text-[11px] font-medium text-gray-700 mb-0.5">
+          {overallStats.completed}/{overallStats.total} done
+        </span>
+        <div className="w-full bg-gray-300 rounded-full h-1.5">
+          <div
+            className="h-1.5 rounded-full bg-green-500 transition-all duration-500"
+            style={{ width: `${overallStats.completionRate}%` }}
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    {/* Compact grid */}
+    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2 text-center">
+      <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
+        <div className="text-lg font-bold text-blue-700 leading-none">
+          {overallStats.totalEmployees}
+        </div>
+        <div className="text-[11px] font-medium text-blue-600">
+          {(LS.get("position") === "HR") ? "Managers" : "Employees"}
+        </div>
+      </div>
+      <div className="bg-gray-50 p-2 rounded-lg border border-gray-200">
+        <div className="text-lg font-bold text-gray-700 leading-none">
+          {overallStats.total}
+        </div>
+        <div className="text-[11px] font-medium text-gray-600">Tasks</div>
+      </div>
+      <div className="bg-red-50 p-2 rounded-lg border border-red-200">
+        <div className="text-lg font-bold text-red-700 leading-none">
+          {overallStats.todo}
+        </div>
+        <div className="text-[11px] font-medium text-red-600">To Do</div>
+      </div>
+      <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
+        <div className="text-lg font-bold text-blue-700 leading-none">
+          {overallStats.inProgress}
+        </div>
+        <div className="text-[11px] font-medium text-blue-600">In Progress</div>
+      </div>
+      <div className="bg-green-50 p-2 rounded-lg border border-green-200">
+        <div className="text-lg font-bold text-green-700 leading-none">
+          {overallStats.completed}
+        </div>
+        <div className="text-[11px] font-medium text-green-600">Completed</div>
+      </div>
+      <div className="bg-red-50 p-2 rounded-lg border border-red-200">
+        <div className="text-lg font-bold text-red-700 leading-none">
+          {overallStats.overdue}
+        </div>
+        <div className="text-[11px] font-medium text-red-600">Overdue</div>
+      </div>
+      <div className="bg-green-50 p-2 rounded-lg border border-green-200">
+        <div className="text-lg font-bold text-green-700 leading-none">
+          {overallStats.highPriority}
+        </div>
+        <div className="text-[11px] font-medium text-green-600">High Priority</div>
+      </div>
+      <div className="bg-indigo-50 p-2 rounded-lg border border-indigo-200">
+        <div className="text-lg font-bold text-indigo-700 leading-none">
+          {overallStats.completionRate}%
+        </div>
+        <div className="text-[11px] font-medium text-indigo-600">Progress</div>
+      </div>
+    </div>
+  </div>
+)}
+
+        {/* Filters and Search (compact) */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-2 rounded-xl border border-gray-200 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
@@ -598,7 +668,7 @@ const TaskProgress = () => {
                   placeholder="Search tasks or employees..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="pl-10 pr-3 py-1.5 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
             </div>
@@ -607,12 +677,13 @@ const TaskProgress = () => {
               <select
                 value={filters.status}
                 onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="all">All Status</option>
                 <option value="todo">To Do</option>
                 <option value="in-progress">In Progress</option>
                 <option value="completed">Completed</option>
+                <option value="verified">Verified</option>
               </select>
             </div>
             <div>
@@ -620,7 +691,7 @@ const TaskProgress = () => {
               <select
                 value={filters.priority}
                 onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="all">All Priority</option>
                 <option value="low">Low Priority</option>
@@ -633,7 +704,7 @@ const TaskProgress = () => {
               <select
                 value={filters.dateRange}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -648,7 +719,7 @@ const TaskProgress = () => {
                   setFilters({ employee: 'all', status: 'all', priority: 'all', dateRange: 'all' });
                   setSearchTerm('');
                 }}
-                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="w-full px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
               >
                 Clear Filters
               </button>
@@ -656,67 +727,102 @@ const TaskProgress = () => {
           </div>
         </div>
       </div>
-      {/* Employee Task Lists */}
-      <div className="p-6 space-y-6">
-        {filteredEmployeeTasks.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📋</div>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">No tasks found</h3>
-            <p className="text-gray-500">No tasks match your current filters or search criteria.</p>
-          </div>
-        ) : (
-          filteredEmployeeTasks.map((employee) => {
-            const isExpanded = expandedEmployees.has(employee.employeeId);
-            const employeeStats = {
-              total: employee.tasks.length,
-              completed: employee.tasks.filter(t => t.status === 'completed').length,
-              inProgress: employee.tasks.filter(t => t.status === 'in-progress').length,
-              overdue: employee.tasks.filter(t => {
-                if (!t.due_date || t.status === 'completed') return false;
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const dueDate = new Date(t.due_date);
-                dueDate.setHours(0, 0, 0, 0);
-                return dueDate < today;
-              }).length,
-              progress: employee.tasks.length > 0 ? Math.round((employee.tasks.filter(t => t.status === 'completed').length / employee.tasks.length) * 100) : 0
-            };
-            return (
-              <div key={employee.employeeId} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                {/* Employee Header */}
-                <div
-                  className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b border-gray-200 cursor-pointer hover:from-blue-100 hover:to-blue-200 transition-colors"
-                  onClick={() => toggleEmployeeExpansion(employee.employeeId)}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                        <FaUserTie className="text-white text-xl" />
+      {/* Master-Detail: Left = compact employee list, Right = selected employee detail */}
+      <div className="p-4">
+        <div className="flex gap-6 h-[calc(100vh-var(--tp-header-height)-16px)] overflow-hidden">
+          {/* Left column: compact scrollable employee list */}
+          <div className="w-80 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-3 border-b">
+              <h4 className="text-sm font-semibold text-gray-700">Team</h4>
+              <p className="text-xs text-gray-500">Select an employee to view tasks progress</p>
+            </div>
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - var(--tp-header-height) - 40px)' }}>
+              {filteredEmployeeTasks.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">No employees</div>
+              ) : (
+                filteredEmployeeTasks.map(emp => {
+                  const isSelected = emp.employeeId === selectedEmployeeId;
+                  const empStats = {
+                    total: emp.tasks.length,
+                    completed: emp.tasks.filter(t => t.status === 'completed').length
+                  };
+                  return (
+                    <div
+                      key={emp.employeeId}
+                      onClick={() => { setSelectedEmployeeId(emp.employeeId); setExpandedEmployees(new Set([emp.employeeId])); }}
+                      className={`flex items-center gap-3 px-3 py-2 cursor-pointer ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm">
+                        <FaUserTie />
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-800">{employee.employeeName}</h3>
-                        <p className="text-blue-600 font-medium">{employee.tasks.length} assigned tasks</p>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="text-sm font-medium text-gray-800">{emp.employeeName}</div>
+                            <div className="text-xs text-gray-500">{emp.tasks.length} tasks</div>
+                          </div>
+                          <div className="text-xs text-gray-500">{empStats.completed}/{empStats.total}</div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-6">
-                      {/* Employee Stats */}
-                      <div className="hidden md:flex items-center gap-4 text-sm">
-                        <div className="text-center">
-                          <div className="font-bold text-green-700">{employeeStats.completed}</div>
-                          <div className="text-green-600">Completed</div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Right column: selected employee detail */}
+          <div className="flex-1 overflow-hidden">
+            {(!selectedEmployeeId) ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center text-gray-500">Select an employee to view tasks</div>
+            ) : (
+              (() => {
+                const selected = filteredEmployeeTasks.find(e => e.employeeId === selectedEmployeeId) || filteredEmployeeTasks[0];
+                if (!selected) return <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center text-gray-500">No tasks found</div>;
+                const employeeStats = {
+                  total: selected.tasks.length,
+                  completed: selected.tasks.filter(t => t.status === 'completed').length,
+                  inProgress: selected.tasks.filter(t => t.status === 'in-progress').length,
+                  overdue: selected.tasks.filter(t => {
+                    if (!t.due_date || t.status === 'completed') return false;
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    const dueDate = new Date(t.due_date);
+                    dueDate.setHours(0,0,0,0);
+                    return dueDate < today;
+                  }).length,
+                  progress: selected.tasks.length > 0 ? Math.round((selected.tasks.filter(t => t.status === 'completed').length / selected.tasks.length) * 100) : 0
+                };
+                return (
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-1 border-b border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                            <FaUserTie className="text-white text-lg" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-800">{selected.employeeName}</h3>
+                            <p className="text-blue-600 font-medium text-sm">{selected.tasks.length} assigned tasks</p>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <div className="font-bold text-blue-700">{employeeStats.inProgress}</div>
-                          <div className="text-gray-600">In Progress</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-bold text-red-700">{employeeStats.overdue}</div>
-                          <div className="text-gray-600">Overdue</div>
-                        </div>
-                        <div className="text-center">
-                          <div className="font-bold text-gray-700">{employeeStats.progress}%</div>
-                          <div className="text-gray-600">Progress</div>
-                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-center">
+                            <div className="font-bold text-green-700">{employeeStats.completed}</div>
+                            <div className="text-green-600 text-sm">Completed</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold text-blue-700">{employeeStats.inProgress}</div>
+                            <div className="text-gray-600 text-sm">In Progress</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="font-bold text-red-700">{employeeStats.overdue}</div>
+                            <div className="text-gray-600 text-sm">Overdue</div>
+                          </div>
+                          {/* <div className="text-center">
+                            <div className="font-bold text-gray-700">{employeeStats.progress}%</div>
+                            <div className="text-gray-600">Progress</div>
+                        </div> */}
                       </div>
                       {/* Progress Circle */}
                       <div className="relative w-16 h-16">
@@ -738,50 +844,29 @@ const TaskProgress = () => {
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span className="text-sm font-bold text-blue-600">{employeeStats.progress}%</span>
                         </div>
+                        </div>
                       </div>
-                      {/* Expand/Collapse Icon */}
-                      {isExpanded ? (
-                        <FaChevronUp className="text-blue-600 text-xl" />
+                    </div>
+                    <div className="p-4">
+                      {selected.tasks.length === 0 ? (
+                        <div className="text-center py-6 text-gray-500">
+                          <FaClipboardList className="text-3xl mx-auto mb-2 opacity-50" />
+                          <p>No tasks for this {(LS.get("position") === "Manager")  ? "manager" : "employee"} matching current filters</p>
+                        </div>
                       ) : (
-                        <FaChevronDown className="text-blue-600 text-xl" />
+                        <div className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - var(--tp-header-height) - 80px)' }}>
+                          {selected.tasks.map((task) => (
+                            <TaskCard key={task.id} task={task} employeeName={selected.employeeName} />
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
-                  {/* Progress Bar */}
-                  <div className="mt-4">
-                    <div className="w-full bg-blue-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${employeeStats.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-                {/* Employee Tasks */}
-                {isExpanded && (
-                  <div className="p-6">
-                    {employee.tasks.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <FaClipboardList className="text-4xl mx-auto mb-2 opacity-50" />
-                        <p>No tasks for this {(LS.get("position") === "Manager")  ? "manager" : "employee"} matching current filters</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-                        {employee.tasks.map((task) => (
-                          <TaskCard 
-                            key={task.id} 
-                            task={task} 
-                            employeeName={employee.employeeName} 
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
+                );
+              })()
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

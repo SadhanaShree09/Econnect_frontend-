@@ -8,7 +8,7 @@ import {
   FaSave, FaUpload
 } from "react-icons/fa";
 import { LS, ipadr } from "../Utils/Resuse";
-import { toast } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 /**
@@ -43,6 +43,11 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     dueDate: ""
   });
   const fileInputRef = useRef(null);
+  const [verifyModal, setVerifyModal] = useState({
+  open: false,
+  action: "", // "verify" or "unverify"
+ });
+  const [verifyProcessing, setVerifyProcessing] = useState(false);
 
   const statusColumns = [
     { id: "todo", title: "To Do", color: "bg-red-100", borderColor: "border-red-300" },
@@ -196,6 +201,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
   // Add comment
   const addComment = useCallback(async () => {
     if (!newComment.trim() || !task) return;
+    if (task.verified) return toast.error('This task is verified and cannot be commented on.');
     const newEntry = {
       id: Date.now(),
       user: `${LS.get("name")} (${commentLabel || role})`,
@@ -233,6 +239,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
   // Add subtask
   const addSubtask = useCallback(async () => {
     if (!newSubtask.trim() || !task) return;
+    if (task.verified) return toast.error('This task is verified and cannot be edited.');
     const newEntry = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       text: newSubtask,
@@ -271,6 +278,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
       toast.error("Please select a file first");
       return;
     }
+    if (task.verified) return toast.error('This task is verified and cannot accept new files.');
     setUploading(true);
     try {
       const formData = new FormData();
@@ -298,6 +306,11 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
   // Update task status
   const updateTaskStatus = async (newStatus) => {
     if (!task) return;
+    // Prevent changing status of verified tasks (unless explicitly unverifying)
+    if (task.verified) {
+      toast.error('This task is verified and cannot be moved. Unverify first to change status.');
+      return;
+    }
     try {
       const res = await fetch(`${ipadr}/edit_task`, {
         method: "PUT",
@@ -326,6 +339,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
   // Update task details
   const updateTaskDetails = useCallback(async () => {
     if (!task) return;
+    if (task.verified) return toast.error('This task is verified and cannot be edited.');
     try {
       const res = await fetch(`${ipadr}/edit_task`, {
         method: "PUT",
@@ -356,6 +370,35 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
       toast.error(err.message);
     }
   }, [task, taskEdit]);
+
+  const handleVerifyAction = async (action) => {
+    if (!task) return;
+    setVerifyProcessing(true);
+    try {
+      const payload = {
+        taskid: task.id,
+        userid: task.assigned_to_id || task.userid,
+        verified: action === 'verify'
+      };
+
+      const res = await fetch(`${ipadr}/edit_task`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.detail || json.message || 'Failed to update verification');
+
+      // Update local UI
+      setTask(prev => ({ ...prev, verified: action === 'verify' }));
+      toast.success(action === 'verify' ? 'Task Verified Successfully ' : 'Task Verification Revoked ');
+      setVerifyModal({ open: false, action: '' });
+    } catch (err) {
+      toast.error(err.message || 'Verification failed');
+    } finally {
+      setVerifyProcessing(false);
+    }
+  };
 
   useEffect(() => {
     if (taskId) {
@@ -396,6 +439,17 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       {/* Header - fixed at the top */}
       <div className="bg-white shadow-sm border-b border-gray-200 p-2 sticky top-0 z-10 min-h-[70px]">
         <div className="flex items-center justify-between mb-2">
@@ -417,40 +471,127 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
             )}
           </div>
         )}
-        {/* Task Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded p-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-2 text-x flex-wrap items-center">
-            <div className="flex items-center gap-1 break-words whitespace-normal min-w-0">
-              <span className="break-words whitespace-normal min-w-0 font-bold">{task.task}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <FaUser className="text-blue-200" />
-              <span>Assigned to: <strong>{task.assignedTo}</strong></span>
-            </div>
-            <div className="flex items-center gap-1">
-              <FaFlag className="text-blue-200" />
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority] || priorityColors.medium}`}>
-                {task.priority?.toUpperCase() || 'MEDIUM'} PRIORITY
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <FaClock className="text-blue-200" />
-              <span className={dueDateStatus?.status === 'overdue' ? 'text-red-300 font-semibold' : ''}>
-                Due: {task.due_date ? formatDate(task.due_date) : "No due date"}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span>Status:</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                task.status === 'completed' ? 'bg-green-100 text-green-700' :
-                task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
-                'bg-red-100 text-red-700'
-              }`}>
-                {task.status === 'completed' ? 'Completed' : task.status === 'in-progress' ? 'In Progress' : 'To Do'}
-              </span>
-            </div>
-          </div>
-        </div>
+{/* Task Header */}
+<div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded p-2">
+  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-2 text-x flex-wrap items-start">
+    
+    {/* Title with vertical scroll */}
+    <div className="flex-1 min-w-0 max-h-20 overflow-y-auto p-1">
+      <p className="font-bold break-words whitespace-pre-wrap">
+        {task.task}
+      </p>
+    </div>
+
+    {/* Assigned To */}
+    <div className="flex items-center gap-1">
+      <FaUser className="text-blue-200" />
+      <span>Assigned to: <strong>{task.assignedTo}</strong></span>
+    </div>
+
+    {/* Priority */}
+    <div className="flex items-center gap-1">
+      <FaFlag className="text-blue-200" />
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority] || priorityColors.medium}`}>
+        {task.priority?.toUpperCase() || 'MEDIUM'} PRIORITY
+      </span>
+    </div>
+
+    {/* Due Date */}
+    <div className="flex items-center gap-1">
+      <FaClock className="text-blue-200" />
+      <span className={dueDateStatus?.status === 'overdue' ? 'text-red-300 font-semibold' : ''}>
+        Due: {task.due_date ? formatDate(task.due_date) : "No due date"}
+      </span>
+    </div>
+
+   {/* Status + Verify Button */}
+<div className="flex items-center gap-3">
+  <div className="flex items-center gap-1">
+    <span>Status:</span>
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+      task.status === 'completed' ? 'bg-green-100 text-green-700' :
+      task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+      'bg-red-100 text-red-700'
+    }`}>
+      {task.status === 'completed' ? 'Completed' : task.status === 'in-progress' ? 'In Progress' : 'To Do'}
+    </span>
+  </div>
+
+ {/* Verify Button with confirmation */}
+<button
+  onClick={() => {
+    setVerifyModal({
+      open: true,
+      action: task.verified ? "unverify" : "verify"
+    });
+  }}
+  disabled={task.status !== "completed"}
+  className={`px-3 py-1 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
+    task.status !== "completed"
+      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+      : task.verified
+      ? "bg-green-700 hover:bg-green-800 text-white"
+      : "bg-green-600 hover:bg-green-700 text-white"
+  }`}
+>
+  <FaCheckCircle className={`${task.verified ? "text-white" : ""}`} />
+  {task.verified ? "Verified" : "Verify"}
+</button>
+
+
+</div>
+{/* Verify/Unverify Modal */}
+{verifyModal.open && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="bg-white rounded-lg p-6 w-96 shadow-lg">
+      <h3
+  className={`text-lg font-semibold mb-4 ${
+    verifyModal.action === "verify" ? "text-green-700" : "text-red-700"
+  }`}
+>
+  {verifyModal.action === "verify" ? "Verify Task" : "Revoke Verification"}
+</h3>
+
+    <p className="mb-6 text-gray-800">
+  {verifyModal.action === "verify"
+    ? "Do you want to verify this task as completed?"
+    : "Do you want to revoke the verification for this task?"}
+</p>
+
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setVerifyModal({ open: false, action: "" })}
+          disabled={verifyProcessing}
+          className="px-4 py-2 bg-gray-500 rounded hover:bg-gray-600 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => handleVerifyAction(verifyModal.action)}
+          disabled={verifyProcessing}
+          className={`px-4 py-2 rounded text-white disabled:opacity-50 ${
+            verifyModal.action === "verify"
+              ? "bg-green-600 hover:bg-green-700"
+              : "bg-red-600 hover:bg-red-700"
+          }`}
+        >
+          {verifyProcessing ? (
+            <span className="flex items-center gap-2"><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>Processing...</span>
+          ) : (
+            verifyModal.action === "verify" ? "Verify" : "Revoke"
+          )}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+  </div>
+</div>
+
+
       </div>
       {/* Main Content - scrollable */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-6 overflow-y-auto">
@@ -492,6 +633,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
                   onChange={(e) => setNewSubtask(e.target.value)}
                   placeholder="Add a new subtask..."
                   className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={task.verified}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -501,7 +643,8 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
                 />
                 <button
                   onClick={addSubtask}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  disabled={task.verified || !newSubtask.trim()}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${task.verified ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
                 >
                   <FaPlus /> Add
                 </button>
@@ -562,10 +705,12 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
                       addComment();
                     }
                   }}
+                  disabled={task.verified}
                 />
                 <button
                   onClick={addComment}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors self-end"
+                  disabled={task.verified || !newComment.trim()}
+                  className={`px-4 py-2 rounded-lg self-end transition-colors ${task.verified ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
                 >
                   Send
                 </button>
@@ -632,16 +777,13 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
                   ref={fileInputRef}
                   type="file"
                   onChange={(e) => setSelectedFile(e.target.files[0])}
-                  className="w-full sm:w-2/3 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={task.verified}
+                  className={`w-full sm:w-2/3 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${task.verified ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                 />
                 <button
                   onClick={handleFileUpload}
-                  disabled={!selectedFile || uploading}
-                  className={`px-6 py-3 rounded-lg transition-colors flex items-center gap-2 ${
-                    selectedFile && !uploading
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                  }`}
+                  disabled={task.verified || !selectedFile || uploading}
+                  className={`px-6 py-3 rounded-lg transition-colors flex items-center gap-2 ${task.verified ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : (selectedFile && !uploading ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-400 text-gray-200 cursor-not-allowed')}`}
                 >
                   {uploading ? (
                     <>

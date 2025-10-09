@@ -682,10 +682,10 @@ const NotificationDashboard = () => {
           <WebSocketTest />
           
           {/* Header */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+          <div className="bg-white rounded-xl shadow-md p-6 mb-4">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div className="flex items-center">
-                <div className="bg-blue-300 p-4 rounded-full mr-4 flex-shrink-0">
+                <div className="bg-blue-300 p-4 rounded-full mr-4 flex-shrink-0 shadow-sm">
                   <FaBell className="text-white text-2xl" />
                 </div>
                 <div>
@@ -721,7 +721,7 @@ const NotificationDashboard = () => {
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl shadow-lg p-5 mb-4">
+          <div className="bg-white rounded-xl shadow-md p-5 mb-4">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
               <div className="flex items-center text-blue-400">
                 <FaFilter className="text-xl mr-2" />
@@ -798,11 +798,11 @@ const NotificationDashboard = () => {
               return (
               <div
                 key={notification._id}
-                className={`transition-all duration-200 ${
+                className={`transition-all duration-200 shadow-md ${
                   isOverdue ? 'bg-red-50 border-l-red-500 border border-red-200' :
                   !notification.is_read 
-                    ? 'bg-white border-l-blue-400 border border-gray-200 shadow-md hover:shadow-lg' 
-                    : 'bg-white border-l-gray-300 border border-gray-200 hover:shadow-md'
+                    ? 'bg-white border-l-blue-400 border border-gray-200 hover:shadow-lg' 
+                    : 'bg-white border-l-gray-300 border border-gray-200 hover:shadow-lg'
                 } rounded-lg p-4 border-l-4 ${
                   notification.action_url || notification.type ? 'cursor-pointer hover:border-l-blue-400' : 'cursor-default'
                 } ${
