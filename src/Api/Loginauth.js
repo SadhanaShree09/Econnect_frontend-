@@ -65,7 +65,7 @@ export const Apisignin = async ({ client_name, email }) => {
     LS.save("isadmin", Comp.isadmin);
     LS.save("isloggedin", Comp.isloggedin);
 
-    toast.success("Login Successfully");
+    //toast.success("Login Successfully");
     return Comp;
   } catch (err) {
     // Handle authorization errors specially

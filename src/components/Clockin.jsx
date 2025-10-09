@@ -134,7 +134,7 @@ function Clockin() {
           setCurrentStatus("clocked-in");
           setLogin(true);
           
-          toast.success(`🎉 Successfully clocked in at ${formatTime(now)}!`, {
+          toast.success(`Successfully clocked in at ${formatTime(now)}!`, {
             autoClose: 2000
           });
           
@@ -246,9 +246,9 @@ function Clockin() {
             <div className="text-center">
               <div className="mb-4">
                 {confirmationAction === 'clockin' ? (
-                  <FaSignInAlt className="text-6xl text-green-500 mx-auto" />
+                  <FaSignInAlt className="text-6xl text-green-300 mx-auto" />
                 ) : (
-                  <FaSignOutAlt className="text-6xl text-red-500 mx-auto" />
+                  <FaSignOutAlt className="text-6xl text-red-300 mx-auto" />
                 )}
               </div>
               <div className="text-2xl font-bold mb-3 text-gray-800">
@@ -266,7 +266,7 @@ function Clockin() {
               <div className="flex space-x-3">
                 <button
                   onClick={hideConfirmationDialog}
-                  className="flex-1 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-bold text-base"
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-bold text-base"
                 >
                   Cancel
                 </button>
@@ -274,8 +274,8 @@ function Clockin() {
                   onClick={executeAction}
                   className={`flex-1 px-6 py-3 text-white rounded-lg transition-colors font-bold text-base ${
                     confirmationAction === 'clockin' 
-                      ? 'bg-green-500 hover:bg-green-600' 
-                      : 'bg-red-500 hover:bg-red-600'
+                      ? 'bg-green-300 hover:bg-green-400' 
+                      : 'bg-red-300 hover:bg-red-400'
                   }`}
                 >
                   Confirm
@@ -315,7 +315,7 @@ function Clockin() {
               )}
 
               {currentStatus === "clocked-in" && (
-                <div className="flex items-center space-x-4 bg-green-50 rounded-lg p-5 border-2 border-green-300">
+                <div className="flex items-center space-x-4 bg-white rounded-lg p-5 border-2 border-green-300">
                   <FaCheckCircle className="text-4xl text-green-500 flex-shrink-0" />
                   <div className="flex-1">
                     <div className="text-lg font-bold text-green-700">Currently Clocked In</div>

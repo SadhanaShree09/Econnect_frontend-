@@ -175,7 +175,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
                   stroke="currentColor"
                   className="w-6 h-6 mr-3 text-white"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-5 5v-5zM20.61 10.83l-1.44-1.44a3 3 0 00-4.24 0l-5 5-1.39-1.39a1 1 0 00-1.42 0l-4.24 4.24a1 1 0 000 1.42l1.44 1.44a1 1 0 001.42 0L9 16.83l1.39 1.39a3 3 0 004.24 0l5-5a1 1 0 000-1.39z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
                 <span className="font-medium">Notifications</span>
               </div>
@@ -282,7 +282,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
                   stroke="currentColor"
                   className="w-6 h-6 mr-3 text-white"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-5 5v-5zM20.61 10.83l-1.44-1.44a3 3 0 00-4.24 0l-5 5-1.39-1.39a1 1 0 00-1.42 0l-4.24 4.24a1 1 0 000 1.42l1.44 1.44a1 1 0 001.42 0L9 16.83l1.39 1.39a3 3 0 004.24 0l5-5a1 1 0 000-1.39z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                 </svg>
                 <span className="font-medium">Notifications</span>
               </div>

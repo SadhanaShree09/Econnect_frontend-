@@ -668,111 +668,129 @@ const NotificationDashboard = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-300"></div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-50 via-gray-100 to-[#6d9eeb]/10 overflow-hidden">
-      <div className="flex-shrink-0 p-6">
-        {/* WebSocket Test Component */}
-        <WebSocketTest />
-        
-        {/* Header */}
-        <div className="glass-effect bg-white/95 rounded-xl shadow-lg p-6 mb-4 border border-white/20 notification-enter">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="bg-[#6d9eeb] p-3 rounded-full mr-4">
-                <FaBell className="text-white text-xl" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">E-Connect Notifications</h1>
-                <div className="flex items-center space-x-2">
-                  <p className="text-gray-600">Stay updated with all your activities</p>
-                  <div className="flex items-center space-x-1">
-                    {isConnected ? (
-                      <FaWifi className="text-green-500 text-sm" title="Real-time connected" />
-                    ) : (
-                      <FaTimesCircle className="text-orange-500 text-sm" title="Polling mode" />
-                    )}
-                    <span className="text-xs text-gray-500">
-                      {isConnected ? 'Live' : 'Polling'}
-                    </span>
+    <div className="h-screen flex flex-col bg-white overflow-hidden">
+      {/* Fixed Header Section */}
+      <div className="flex-shrink-0">
+        <div className="max-w-7xl mx-auto p-6 pb-0">
+          {/* WebSocket Test Component */}
+          <WebSocketTest />
+          
+          {/* Header */}
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+              <div className="flex items-center">
+                <div className="bg-blue-300 p-4 rounded-full mr-4 flex-shrink-0">
+                  <FaBell className="text-white text-2xl" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">E-Connect Notifications</h1>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <p className="text-gray-600">Stay updated with all your activities</p>
+                    <div className="flex items-center space-x-1">
+                      {isConnected ? (
+                        <FaWifi className="text-green-500 text-sm" title="Real-time connected" />
+                      ) : (
+                        <FaTimesCircle className="text-orange-500 text-sm" title="Polling mode" />
+                      )}
+                      <span className="text-xs text-gray-500">
+                        {isConnected ? 'Live' : 'Polling'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-[#6d9eeb]/20 text-[#6d9eeb] px-4 py-2 rounded-full font-semibold border border-[#6d9eeb]/30">
-                {unreadCount} unread
+              <div className="flex items-center space-x-3 w-full lg:w-auto justify-end">
+                <div className="bg-blue-50 text-blue-500 px-5 py-2.5 rounded-xl font-semibold text-sm">
+                  {unreadCount} unread
+                </div>
+                <button
+                  onClick={markAllAsRead}
+                  className="bg-blue-300 text-white px-6 py-2.5 rounded-xl hover:bg-blue-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  disabled={unreadCount === 0}
+                >
+                  Mark All Read
+                </button>
               </div>
-              <button
-                onClick={markAllAsRead}
-                className="bg-[#6d9eeb] text-white px-6 py-2 rounded-lg hover:bg-[#5a8bd9] transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={unreadCount === 0}
-              >
-                Mark All Read
-              </button>
             </div>
           </div>
-        </div>
 
-        {/* Filters */}
-        <div className="glass-effect bg-white/95 rounded-xl shadow-lg p-4 mb-4 border border-white/20 notification-enter" style={{animationDelay: '0.1s'}}>
-          <div className="flex items-center space-x-4">
-            <FaFilter className="text-[#6d9eeb]" />
-            <div className="flex space-x-4">
-              <select
-                value={filter.type}
-                onChange={(e) => handleFilterChange('type', e.target.value)}
-                className="border border-[#6d9eeb]/30 rounded-lg px-4 py-2 bg-white focus:border-[#6d9eeb] focus:ring-2 focus:ring-[#6d9eeb]/20 outline-none transition-all duration-200"
-              >
-                <option value="all">All Types</option>
-                <option value="task">Tasks</option>
-                <option value="leave">Leave</option>
-                <option value="wfh">Work from Home</option>
-                <option value="system">System</option>
-                <option value="attendance">Attendance</option>
-              </select>
+          {/* Filters */}
+          <div className="bg-white rounded-xl shadow-lg p-5 mb-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+              <div className="flex items-center text-blue-400">
+                <FaFilter className="text-xl mr-2" />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <select
+                  value={filter.type}
+                  onChange={(e) => handleFilterChange('type', e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-50 outline-none transition-all duration-200"
+                >
+                  <option value="all">All Types</option>
+                  <option value="task">Tasks</option>
+                  <option value="leave">Leave</option>
+                  <option value="wfh">Work from Home</option>
+                  <option value="system">System</option>
+                  <option value="attendance">Attendance</option>
+                </select>
 
-              <select
-                value={filter.priority}
-                onChange={(e) => handleFilterChange('priority', e.target.value)}
-                className="border border-[#6d9eeb]/30 rounded-lg px-4 py-2 bg-white focus:border-[#6d9eeb] focus:ring-2 focus:ring-[#6d9eeb]/20 outline-none transition-all duration-200"
-              >
-                <option value="all">All Priorities</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+                <select
+                  value={filter.priority}
+                  onChange={(e) => handleFilterChange('priority', e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-50 outline-none transition-all duration-200"
+                >
+                  <option value="all">All Priorities</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
 
-              <select
-                value={filter.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="border border-[#6d9eeb]/30 rounded-lg px-4 py-2 bg-white focus:border-[#6d9eeb] focus:ring-2 focus:ring-[#6d9eeb]/20 outline-none transition-all duration-200"
-              >
-                <option value="all">All Status</option>
-                <option value="unread">Unread</option>
-                <option value="read">Read</option>
-                <option value="overdue">🚨 Overdue Tasks</option>
-              </select>
+                <select
+                  value={filter.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-50 outline-none transition-all duration-200"
+                >
+                  <option value="all">All Status</option>
+                  <option value="unread">Unread</option>
+                  <option value="read">Read</option>
+                  <option value="overdue">Overdue Tasks</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Notifications List - Scrollable Area */}
-      <div className="flex-1 px-6 pb-6 overflow-hidden">
-        <div className="h-full overflow-y-auto scrollbar-thin space-y-3">
+      {/* Scrollable Notifications List - Hidden Scrollbar */}
+      <div className="flex-1 overflow-hidden">
+        <div 
+          className="h-full overflow-y-auto px-6 pb-6"
+          style={{
+            scrollbarWidth: 'none', /* Firefox */
+            msOverflowStyle: 'none'  /* IE and Edge */
+          }}
+        >
+          <style jsx>{`
+            div::-webkit-scrollbar {
+              display: none; /* Chrome, Safari, Opera */
+            }
+          `}</style>
+          
+          <div className="max-w-7xl mx-auto space-y-4">
           {filteredNotifications.length === 0 ? (
-            <div className="glass-effect bg-white/95 rounded-xl shadow-lg p-8 text-center border border-white/20 notification-enter">
-              <div className="bg-[#6d9eeb]/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaInfoCircle className="text-[#6d9eeb] text-2xl" />
+            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+              <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaInfoCircle className="text-blue-400 text-2xl" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">No notifications found</h3>
-              <p className="text-gray-500">You're all caught up! Check back later for updates.</p>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">No notifications found</h3>
+              <p className="text-gray-600">You're all caught up! Check back later for updates.</p>
             </div>
           ) : (
             filteredNotifications.map((notification, index) => {
@@ -780,25 +798,22 @@ const NotificationDashboard = () => {
               return (
               <div
                 key={notification._id}
-                className={`notification-card-hover glass-effect notification-enter transition-all duration-200 ${
-                  !notification.is_read ? 'unread-highlight' : ''
-                } ${
-                  isOverdue ? 'bg-red-50 border-l-red-500 border-red-200' :
+                className={`transition-all duration-200 ${
+                  isOverdue ? 'bg-red-50 border-l-red-500 border border-red-200' :
                   !notification.is_read 
-                    ? 'bg-white/95 border-l-[#6d9eeb] bg-[#6d9eeb]/5 shadow-lg shadow-[#6d9eeb]/20 ring-2 ring-[#6d9eeb]/20' 
-                    : 'bg-white/95 border-l-gray-300 border border-white/20'
-                } rounded-xl shadow-md p-4 border-l-4 ${
-                  notification.action_url || notification.type ? 'cursor-pointer hover:scale-[1.01] hover:shadow-lg' : 'cursor-default'
+                    ? 'bg-white border-l-blue-400 border border-gray-200 shadow-md hover:shadow-lg' 
+                    : 'bg-white border-l-gray-300 border border-gray-200 hover:shadow-md'
+                } rounded-lg p-4 border-l-4 ${
+                  notification.action_url || notification.type ? 'cursor-pointer hover:border-l-blue-400' : 'cursor-default'
                 } ${
-                  notification.action_url || notification.type ? 'relative overflow-hidden' : ''
+                  notification.action_url || notification.type ? 'relative' : ''
                 }`}
-                style={{animationDelay: `${index * 0.05}s`}}
                 onClick={() => handleNotificationClick(notification)}
               >
                 {/* Clickable indicator */}
                 {(notification.action_url || notification.type) && (
-                  <div className="absolute top-2 right-2 opacity-30 group-hover:opacity-100 transition-opacity duration-200">
-                    <div className="bg-[#6d9eeb] text-white p-1 rounded-full text-xs">
+                  <div className="absolute top-3 right-3 opacity-40 hover:opacity-100 transition-opacity duration-200">
+                    <div className="bg-blue-400 text-white p-1 rounded-full text-xs">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                       </svg>
@@ -807,60 +822,60 @@ const NotificationDashboard = () => {
                 )}
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3 flex-1">
-                    <div className={`mt-1 p-2 rounded-lg ${
+                    <div className={`mt-1 p-2 rounded-lg flex-shrink-0 ${
                       isOverdue ? 'bg-red-100' :
-                      !notification.is_read ? 'bg-[#6d9eeb]/20' : 'bg-gray-100'
+                      !notification.is_read ? 'bg-blue-50' : 'bg-gray-100'
                     }`}>
                       {getTypeIcon(notification)}
                     </div>
                     
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className={`font-medium ${
-                          isOverdue ? 'text-red-700 font-bold' :
-                          !notification.is_read ? 'text-gray-900 font-bold' : 'text-gray-700'
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h3 className={`font-semibold text-sm md:text-base ${
+                          isOverdue ? 'text-red-700' :
+                          !notification.is_read ? 'text-gray-900' : 'text-gray-700'
                         }`}>
                           {notification.title}
                         </h3>
-                        <span className={`priority-badge px-3 py-1 text-xs rounded-full font-medium border ${
+                        <span className={`px-2 py-1 text-xs rounded-md font-medium border ${
                           isOverdue ? 'bg-red-100 text-red-800 border-red-200' : getOverduePriorityColors(notification.priority, isOverdue)
                         }`}>
                           {isOverdue ? 'URGENT' : notification.priority}
                         </span>
                         {!notification.is_read && (
-                          <div className="flex items-center space-x-1">
-                            <div className={`w-3 h-3 rounded-full unread-pulse ${
-                              isOverdue ? 'bg-red-500' : 'bg-[#6d9eeb]'
-                            }`}></div>
-                            <span className={`text-xs font-bold uppercase tracking-wide ${
-                              isOverdue ? 'text-red-600' : 'text-[#6d9eeb]'
-                            }`}>UNREAD</span>
+                          <div className="flex items-center gap-1">
+                            <div className={`w-2 h-2 rounded-full ${
+                              isOverdue ? 'bg-red-500' : 'bg-blue-400'
+                            } animate-pulse`}></div>
+                            <span className={`text-xs font-semibold ${
+                              isOverdue ? 'text-red-600' : 'text-blue-500'
+                            }`}>NEW</span>
                           </div>
                         )}
                       </div>
                       
-                      <p className={`text-sm mb-3 leading-relaxed ${
+                      <p className={`text-sm mb-2 leading-relaxed ${
                         isOverdue ? 'text-red-700 font-medium' :
-                        !notification.is_read ? 'text-gray-800 font-medium' : 'text-gray-600'
+                        !notification.is_read ? 'text-gray-800' : 'text-gray-600'
                       }`}>
                         {notification.message}
                       </p>
                       
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
+                        <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-md">
                           {formatDate(notification.created_at)}
                         </span>
                         
-                        <div className="flex space-x-2">
+                        <div className="flex gap-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               markAsRead(notification._id, notification.is_read);
                             }}
-                            className={`p-2 rounded-lg transition-all duration-200 ${
+                            className={`p-2 rounded-lg transition-colors duration-200 ${
                               notification.is_read 
-                                ? 'text-gray-500 hover:bg-gray-100' 
-                                : 'text-[#6d9eeb] hover:bg-[#6d9eeb]/10 bg-[#6d9eeb]/5'
+                                ? 'text-gray-500 hover:bg-gray-100 border border-gray-300' 
+                                : 'text-blue-500 hover:bg-blue-50 bg-blue-50 border border-blue-200'
                             }`}
                             title={notification.is_read ? 'Mark as unread' : 'Mark as read'}
                           >
@@ -872,7 +887,7 @@ const NotificationDashboard = () => {
                               e.stopPropagation();
                               deleteNotification(notification._id);
                             }}
-                            className="p-2 rounded-lg transition-all duration-200 text-red-500 hover:bg-red-50"
+                            className="p-2 rounded-lg transition-colors duration-200 text-red-600 hover:bg-red-50 border border-red-200"
                             title="Delete notification"
                           >
                             <FaTrash size={14} />
@@ -886,6 +901,7 @@ const NotificationDashboard = () => {
             );
             })
           )}
+          </div>
         </div>
       </div>
     </div>

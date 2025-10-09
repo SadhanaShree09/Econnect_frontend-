@@ -128,10 +128,10 @@ function Clockin_int() {
     Baseaxios.post("/Clockin", { userid, name: userName, time: time })
       .then((response) => {
         setIsLoading(false);
-        console.log("✅ Clock-in successful:", response.data);
+        console.log("Clock-in successful:", response.data);
         toggleTimer();
         
-        toast.success(`🎉 Successfully clocked in at ${formatTime(currentDate)}! Time tracking started.`);
+        toast.success(`Successfully clocked in at ${formatTime(currentDate)}! Time tracking started.`);
       })
       .catch((err) => {
         setIsLoading(false);
@@ -203,16 +203,16 @@ function Clockin_int() {
               <div className="flex space-x-3">
                 <button
                   onClick={hideConfirmationDialog}
-                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={executeAction}
-                  className={`flex-1 px-4 py-2 text-white rounded-md transition-colors ${
+                  className={`flex-1 px-4 py-2 rounded-md transition-colors font-semibold ${
                     confirmationAction === 'clockin' 
-                      ? 'bg-green-500 hover:bg-green-600' 
-                      : 'bg-red-500 hover:bg-red-600'
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300' 
+                      : 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-300'
                   }`}
                 >
                   Confirm
@@ -251,7 +251,7 @@ function Clockin_int() {
             )}
           </div>
         </div>
-        
+
         {/* Productivity Dashboard Header */}
         {!showBackButton && (
           <div className="text-center mb-6">
@@ -261,7 +261,22 @@ function Clockin_int() {
             </div>
           </div>
         )}
-        
+
+        {/* Clocked In Status Box */}
+        {Login && isRunning && (
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-full max-w-2xl border-2 border-green-400 bg-white rounded-xl p-6 flex flex-col items-center" style={{ backgroundColor: 'white', borderColor: '#22c55e', borderWidth: '2px', borderStyle: 'solid' }}>
+              <div className="flex items-center mb-2">
+                <FaCheckCircle className="text-3xl text-green-500 mr-2" />
+                <span className="text-xl font-bold text-green-700">Currently Clocked In</span>
+              </div>
+              <div className="text-green-700 text-base font-medium">
+                Started at: {formatTime(new Date(startTime))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <Outlet />
       </div>
     </div>
