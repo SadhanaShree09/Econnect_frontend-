@@ -219,9 +219,9 @@ const EmployeeDetails = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 py-8 px-4">
             <form
-                className="bg-white p-6 rounded-lg shadow-md w-full max-w-6xl border"
+                className="bg-white p-6 rounded-lg shadow-md w-full max-w-6xl mx-auto border"
                 onSubmit={handleSubmit}
             >
                 <h2 className="text-xl font-semibold mb-6 text-center">Employee Details</h2>
