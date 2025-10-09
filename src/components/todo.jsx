@@ -21,7 +21,7 @@ const ToDoList = () => {
 
   const handleDateClick = () => {
     const formattedDate = formatDate(date); // Ensure date is in dd-mm-yyyy format
-    navigate(`/user/todo?date=${formattedDate}`);
+    navigate(`/User/task?date=${formattedDate}`);
   };
 
   return (

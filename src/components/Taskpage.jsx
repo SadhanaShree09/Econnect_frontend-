@@ -502,7 +502,7 @@ const TaskPage = () => {
 
 
   const openTaskDetails = (task) => {
-    navigate(`/user/todo/${task.id}`, {
+    navigate(`/User/task/${task.id}`, {
       state: {
         task,
         userId,
