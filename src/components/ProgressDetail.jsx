@@ -472,43 +472,43 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
           </div>
         )}
 {/* Task Header */}
-<div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded p-2">
-  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-2 text-x flex-wrap items-start">
+<div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded p-3">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 items-start">
     
     {/* Title with vertical scroll */}
-    <div className="flex-1 min-w-0 max-h-20 overflow-y-auto p-1">
-      <p className="font-bold break-words whitespace-pre-wrap">
+    <div className="col-span-1 md:col-span-2 lg:col-span-1 min-w-0 max-h-20 overflow-y-auto p-1">
+      <p className="font-bold break-words whitespace-pre-wrap text-sm">
         {task.task}
       </p>
     </div>
 
     {/* Assigned To */}
-    <div className="flex items-center gap-1">
-      <FaUser className="text-blue-200" />
-      <span>Assigned to: <strong>{task.assignedTo}</strong></span>
+    <div className="flex items-center gap-2 text-sm">
+      <FaUser className="text-blue-200 flex-shrink-0" />
+      <span className="truncate">Assigned to: <strong>{task.assignedTo}</strong></span>
     </div>
 
     {/* Priority */}
-    <div className="flex items-center gap-1">
-      <FaFlag className="text-blue-200" />
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority] || priorityColors.medium}`}>
+    <div className="flex items-center gap-2 text-sm">
+      <FaFlag className="text-blue-200 flex-shrink-0" />
+      <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${priorityColors[task.priority] || priorityColors.medium}`}>
         {task.priority?.toUpperCase() || 'MEDIUM'} PRIORITY
       </span>
     </div>
 
     {/* Due Date */}
-    <div className="flex items-center gap-1">
-      <FaClock className="text-blue-200" />
-      <span className={dueDateStatus?.status === 'overdue' ? 'text-red-300 font-semibold' : ''}>
+    <div className="flex items-center gap-2 text-sm">
+      <FaClock className="text-blue-200 flex-shrink-0" />
+      <span className={`truncate ${dueDateStatus?.status === 'overdue' ? 'text-red-300 font-semibold' : ''}`}>
         Due: {task.due_date ? formatDate(task.due_date) : "No due date"}
       </span>
     </div>
 
    {/* Status + Verify Button */}
-<div className="flex items-center gap-3">
-  <div className="flex items-center gap-1">
-    <span>Status:</span>
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+<div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 xl:gap-3">
+  <div className="flex items-center gap-2 text-sm">
+    <span className="whitespace-nowrap">Status:</span>
+    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
       task.status === 'completed' ? 'bg-green-100 text-green-700' :
       task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
       'bg-red-100 text-red-700'
@@ -526,7 +526,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     });
   }}
   disabled={task.status !== "completed"}
-  className={`px-3 py-1 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
+  className={`px-3 py-1 text-xs sm:text-sm rounded-lg flex items-center gap-1.5 transition-all duration-200 whitespace-nowrap ${
     task.status !== "completed"
       ? "bg-gray-300 text-gray-600 cursor-not-allowed"
       : task.verified
