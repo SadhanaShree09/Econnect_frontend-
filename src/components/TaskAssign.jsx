@@ -268,7 +268,7 @@ const handlePageChange = (direction) => {
           SetOptions(res.data && Array.isArray(res.data) ? res.data : []);
         } else if (isHR) {
           const res = await axios.get(`${ipadr}/get_manager`);
-          SetOptions(res.data ? [res.data] : []);
+          SetOptions(res.data && Array.isArray(res.data) ? res.data : []);
         }
       } catch {
         SetOptions([]);
